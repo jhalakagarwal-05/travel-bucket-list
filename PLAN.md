@@ -46,9 +46,12 @@ Tests will be written with Vitest. For each test, I will break the feature on pu
 
 ## 6. DESIGN
 
-[Your choice, e.g., clean and airy, white background with teal and warm sand accents, rounded cards with a photo-style header.]
-
-Inspiration: Airbnb Wishlists and Google Maps saved places.
+- **Style:** Clean, airy, travel-journal feel, with rounded cards and plenty of white space.
+- **Colors:** White background, teal (`#0F766E`) as the main accent, warm sand (`#F4E4C1`) for highlights, and dark slate (`#1E293B`) for text.
+- **Status colors:** Dream is purple, planned is amber, and visited is green; use these colors on destination cards and map pins.
+- **Font:** A friendly sans-serif such as Inter.
+- **Layout:** A top navigation bar with My List, Starred, Map, Dashboard, and Log out; show destinations in a grid of cards.
+- **Inspiration:** Airbnb Wishlists (card layout and saving favorites) and Google Maps saved places (pins on a map).
 
 ## 7. RISKS AND CUTS
 
