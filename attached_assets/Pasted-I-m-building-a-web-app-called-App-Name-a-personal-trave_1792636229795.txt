@@ -1,0 +1,24 @@
+I'm building a web app called [App Name], a personal travel bucket list. Do NOT write any app code yet. Your only task right now is to create a file called PLAN.md in the root of the repo with the 7 sections below, using exactly the decisions I give you. Keep it specific and 1–3 pages.
+
+1. PITCH
+"I'm building a travel bucket list app because [your reason, e.g., I keep a messy list of places I want to visit and places I've been, and I want one place to plan trips, including visits to Switzerland]. I'll use it about [how often, e.g., weekly]."
+
+2. FEATURES (user stories, numbered in build order)
+1. As a new visitor, I want to sign up with email and password, log in, and log out, so that my bucket list is private to me.
+2. As a user, I want my data stored in a database with users, destinations, and categories, so that my list persists.
+3. As a user, I want to add a destination, see my list, open a detail page, edit it, and delete it with an "Are you sure?" confirmation, so that I can manage my list.
+4. As a user, I want to see a friendly error if I leave the name or country blank, so that my entries are complete.
+5. As a user, I want to star destinations and see a "Starred" view, so that I can find my top picks fast.
+6. As a user, I want to filter by status, category, or country, and sort by priority or newest, so that I can find places quickly.
+7. As a user, I want a dashboard with a chart of destinations by category and stats (total destinations, number visited, average priority), so that I can see my travel progress.
+8. As a user, I want a map view with a pin for each destination, colored by status, so that I can see my list geographically.
+9. As a user, I want a "Surprise me" button that picks a random destination from my dream list, so that I get inspiration.
+10. As a user, I want a public read-only share link for my bucket list, so that friends and family can see it without logging in.
+
+3. DATABASE
+- users: id (number, primary key), email (text, unique), password_hash (text), created_at (date)
+- categories: id (number, primary key), name (text, e.g., Beach, City, Hiking, Food, Family)
+- destinations: id (number, primary key), user_id (number, references users), category_id (number, references categories), name (text, required), country (text, required), status (text: dream / planned / visited), priority (number 1–5), estimated_cost (number), visited_date (date, optional), latitude (number), longitude (number), notes (text), created_at (date)
+- stars: id (number, primary key), user_id (number, references users), destination_id (number, references destinations); a user can star a destination only once
+- share_links: id (number, primary key), user_id (number, references users), token (text, unique), created_at (date)
+Relationships: one user has many
