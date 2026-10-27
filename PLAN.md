@@ -2,7 +2,7 @@
 
 ## 1. PITCH
 
-I'm building Wanderlist, a personal travel bucket list app, because I want a record of the places I've visited alongside the places I still want to go. I'll use it about quarterly to semi-annually, after each trip and when planning the next one.
+I'm building Wanderlist, a personal travel bucket list app, because I want a record of the places I've visited alongside the places I still want to go. I'll use it after every trip, and most heavily over the next two months while I log past trips and plan winter break.
 
 ## 2. FEATURES
 
