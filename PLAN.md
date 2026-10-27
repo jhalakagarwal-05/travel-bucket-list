@@ -1,14 +1,13 @@
-# Prompt log: PLAN.md
+# Wanderlist — Project Plan
 
-## Prompt 1: Initial plan request
+## 1. PITCH
 
-I'm building a web app called Wanderlist, a personal travel bucket list. Do NOT write any app code yet. Your only task right now is to create a file called PLAN.md in the root of the repo with the 7 sections below, using exactly the decisions I give you. Keep it specific and 1–3 pages.
+I'm building Wanderlist, a personal travel bucket list app, because I want a record of the places I've visited alongside the places I still want to go. I'll use it about quarterly to semi-annually, after each trip and when planning the next one.
 
-1. PITCH
+## 2. FEATURES
 
-I'm building Wanderlist because I want a record of the places I've visited alongside the places I still want to go. I’ll use it after every trip, and most heavily over the next two months while I log past trips and plan winter break, after each trip and when planning the next one.
+User stories, in build order:
 
-2. FEATURES (user stories, numbered in build order)
 1. As a new visitor, I want to sign up with email and password, log in, and log out, so that my bucket list is private to me.
 2. As a user, I want my data stored in a database with users, destinations, and categories, so that my list persists.
 3. As a user, I want to add a destination, see my list, open a detail page, edit it, and delete it with an "Are you sure?" confirmation, so that I can manage my list.
@@ -20,51 +19,50 @@ I'm building Wanderlist because I want a record of the places I've visited along
 9. As a user, I want a "Surprise me" button that picks a random destination from my dream list, so that I get inspiration.
 10. As a user, I want a public read-only share link for my bucket list, so that friends and family can see it without logging in.
 
-3. DATABASE
-- users: id, email (unique), password_hash, created_at
-- categories: id, name
-- destinations: id, user_id, category_id, name (required), country (required), status (dream / planned / visited), priority (1–5), estimated_cost, visited_date, latitude, longitude, notes, created_at
-- stars: id, user_id, destination_id (a user can star a destination only once)
-- share_links: id, user_id, token (unique), created_at
-Relationships: one user has many destinations; one category has many destinations; users and destinations are many-to-many through stars.
+## 3. DATABASE
 
-4–7: Tests, Technologies, Design, Risks and cuts (see Prompt 2 and 3).
+- **users:** `id` (number, primary key), `email` (text, unique), `password_hash` (text), `created_at` (date)
+- **categories:** `id` (number, primary key), `name` (text; examples: Beach, City, Hiking, Food, Family)
+- **destinations:** `id` (number, primary key), `user_id` (number, references users), `category_id` (number, references categories), `name` (text, required), `country` (text, required), `status` (text: dream / planned / visited), `priority` (number 1–5), `estimated_cost` (number), `visited_date` (date, optional), `latitude` (number), `longitude` (number), `notes` (text), `created_at` (date)
+- **stars:** `id` (number, primary key), `user_id` (number, references users), `destination_id` (number, references destinations); a user can star a destination only once.
+- **share_links:** `id` (number, primary key), `user_id` (number, references users), `token` (text, unique), `created_at` (date)
 
-Leave a placeholder heading at the bottom called "Plan vs. Reality" with an empty table. When done, stop. Do not create any other files.
+Relationships: one user has many destinations, stars, and share links; one category has many destinations; one destination can have many stars.
 
-## Prompt 2: Sections 4–7 (Replit asked for exact details)
+## 4. TESTS
 
-4. TESTS
-- Data isolation: Given User A is logged in and has added a destination called "Kyoto", when User B logs in and opens their destinations list, then User B sees an empty list and cannot open User A's destination by its URL.
-- Dashboard stat: Given a user has 3 destinations with priorities 2, 4, and 5, when they open the dashboard, then "Average priority" shows 3.7.
+- **Data isolation:** Given User A is logged in and has added a destination called "Kyoto", when User B logs in and opens their destinations list, then User B sees an empty list and cannot open User A's destination by its URL.
+- **Dashboard stat:** Given a user has 3 destinations with priorities 2, 4, and 5, when they open the dashboard, then "Average priority" shows 3.7.
 
-5. TECHNOLOGIES
-- Coding agent: Replit Agent, because it can write code, set up the database, and deploy in one place.
-- Database: Replit's built-in PostgreSQL, because it handles relationships between tables well.
-- Sign up and login: email and password in my own users table, hashed with bcrypt, session-based login.
-- Hosting: Replit Deployments.
-- Map: Leaflet with OpenStreetMap, free and no API key.
-- Charts: Chart.js.
-- Testing: Vitest.
-- Code hosting: GitHub, with every change merged through a pull request.
+Tests will be written with Vitest. For each test, I will break the feature on purpose, show it failing (red), revert the break, and show it passing (green).
 
-7. RISKS AND CUTS
-- Least sure I can build: the map view, because each destination needs latitude and longitude. Fallback: enter coordinates manually.
-- First to cut: the public read-only share link.
+## 5. TECHNOLOGIES
 
-## Prompt 3: Design section
+- **Coding agent:** Replit Agent, because it can write code, set up the database, and deploy in one place.
+- **Database:** Replit's built-in PostgreSQL, because it's included in Replit and handles relationships between tables well.
+- **Sign up and login:** Email and password stored in my own users table, with passwords hashed using bcrypt and session-based login, because the assignment requires accounts created inside the app and each user seeing only their own data.
+- **Hosting:** Replit Deployments, because it publishes the app to a live URL directly from my project.
+- **Map:** Leaflet with OpenStreetMap tiles, because it's free and needs no API key.
+- **Charts:** Chart.js, because it's simple and well documented for the dashboard's bar and pie charts.
+- **Testing:** Vitest, because it's fast and works well with a JavaScript project.
+- **Code hosting:** GitHub, with every change merged into main through a pull request, as the assignment requires.
 
-Replit left Section 6 as a placeholder, so I gave it my design choices:
-- Style: clean, airy, travel-journal feel, with rounded cards and plenty of white space.
-- Colors: white background, teal (#0F766E) accent, warm sand (#F4E4C1) highlights, dark slate (#1E293B) text.
-- Status colors: dream = purple, planned = amber, visited = green.
-- Font: Inter.
-- Layout: top nav with My List, Starred, Map, Dashboard, Log out; destinations as a grid of cards.
-- Inspiration: Airbnb Wishlists and Google Maps saved places.
+## 6. DESIGN
 
-## What went wrong and how I fixed it
+- **Style:** Clean, airy, travel-journal feel, with rounded cards and plenty of white space.
+- **Colors:** White background, teal (`#0F766E`) as the main accent, warm sand (`#F4E4C1`) for highlights, and dark slate (`#1E293B`) for text.
+- **Status colors:** Dream is purple, planned is amber, and visited is green; use these colors on destination cards and map pins.
+- **Font:** A friendly sans-serif such as Inter.
+- **Layout:** A top navigation bar with My List, Starred, Map, Dashboard, and Log out; show destinations in a grid of cards.
+- **Inspiration:** Airbnb Wishlists (card layout and saving favorites) and Google Maps saved places (pins on a map).
 
-1. Replit Agent left the Design section as a placeholder instead of using my choices. I noticed when it said so in its reply, and fixed it with Prompt 3.
-2. Replit Agent committed PLAN.md directly to main, which breaks the "nothing committed directly to main" rule. I noticed when `git log` showed the plan commits on main. I fixed it by saving the commits to a new `plan` branch (`git branch plan`), resetting main to the commit before the plan (`git reset --hard 0884529`), and then merging the plan through a pull request.
+## 7. RISKS AND CUTS
 
-Lesson: Replit Agent auto-commits to whatever branch is checked out, so I now create a feature branch before every prompt.
+- **Least sure I can build:** The map view (needs latitude and longitude for each destination).
+- **First to cut if short on time:** The public share link.
+
+## Plan vs. Reality
+
+| Planned feature | Shipped / Changed / Cut | Status (Done/Backlogged) | Learning | What changed and why |
+|---|---|---|---|---|
+|  |  |  |  |  |
