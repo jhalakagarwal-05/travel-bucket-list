@@ -1,0 +1,1 @@
+Read PLAN.md. Build ONLY the data model: create the categories and destinations tables exactly as in PLAN.md section 3, connected to users. Seed categories: Beach, City, Hiking, Food, Family. No UI yet beyond what's needed. Don't modify PLAN.md. Save this prompt verbatim to prompts/data-model.md.
