@@ -81,6 +81,16 @@ describe("email and password authentication", () => {
     });
     expect(wrongPassword.status).toBe(401);
     expect(wrongPassword.body.error).toMatch(/don't match/i);
+
+    const login = await agent.post("/api/auth/login").send({
+      email,
+      password: "correct horse battery",
+    });
+    expect(login.status).toBe(200);
+    const restoredSession = await agent.get("/api/auth/me");
+    expect(restoredSession.status).toBe(200);
+    expect(restoredSession.body.user.email).toBe(email);
+    await agent.post("/api/auth/logout");
   });
 });
 

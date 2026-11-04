@@ -1,0 +1,1 @@
+- [Project stack](project-stack.md) — the user requires the chosen Node.js, Express, React/Vite, and PostgreSQL/Drizzle stack throughout the project.
