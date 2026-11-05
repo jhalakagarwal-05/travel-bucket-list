@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
+import DestinationWorkspace from './Destinations';
 import './index.css';
 
 type User = { id: number; email: string };
-type Route = '/login' | '/signup' | '/my-list';
+type Route = '/login' | '/signup' | '/my-list' | `/destinations/${string}`;
 
 function getRoute(): Route {
   const path = window.location.pathname;
   if (path === '/login' || path === '/signup') return path;
+  if (path.startsWith('/destinations/')) return path as Route;
   return '/my-list';
 }
 
@@ -162,31 +164,12 @@ function SiteNav({ onLogout, busy }: { onLogout: () => void; busy: boolean }) {
   );
 }
 
-function MyList({ user, onLogout, logoutBusy, logoutError }: { user: User; onLogout: () => void; logoutBusy: boolean; logoutError: string }) {
+function MyList({ path, onUnauthorized, onLogout, logoutBusy, logoutError }: { path: string; onUnauthorized: () => void; onLogout: () => void; logoutBusy: boolean; logoutError: string }) {
   return (
     <div className="app-shell">
       <SiteNav onLogout={onLogout} busy={logoutBusy} />
-      <main className="list-main">
-        {logoutError && <div className="form-alert" role="alert" style={{ maxWidth: 520, marginBottom: 24 }}>{logoutError}</div>}
-        <div className="list-welcome">
-          <div>
-            <span className="eyebrow">Your travel journal</span>
-            <h1>My List</h1>
-            <p>All the places you’re dreaming of, in one place.</p>
-          </div>
-          <span className="count-pill"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="m8 1.5 1.7 4.1 4.3.4-3.3 2.8 1 4.2L8 10.8l-3.7 2.2 1-4.2L2 6l4.3-.4L8 1.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/></svg> A list of your own</span>
-        </div>
-        <section className="empty-card" aria-label="Your destinations">
-          <div className="empty-content">
-            <div className="empty-art" aria-hidden="true">
-              <svg viewBox="0 0 64 64" fill="none"><path d="m13 43 9-24 7 17 5-12 16 25H15a2 2 0 0 1-2-2v-4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="m34 37 4-2 5 8H24l5-8 5 2Z" fill="#F4E4C1"/><path d="M45 15c0 4-5 9-5 9s-5-5-5-9a5 5 0 1 1 10 0Z" fill="white" stroke="currentColor" strokeWidth="2"/><circle cx="40" cy="15" r="1.5" fill="currentColor"/></svg>
-            </div>
-            <h2>Every great journey starts somewhere.</h2>
-            <p>Make this space your own. Your travel list will be ready to grow whenever you are.</p>
-            <span className="quiet-label">Signed in as {user.email}</span>
-          </div>
-        </section>
-      </main>
+      {logoutError && <div className="form-alert" role="alert" style={{ maxWidth: 520, margin: '24px auto' }}>{logoutError}</div>}
+      <DestinationWorkspace path={path} navigate={(nextPath) => navigate(nextPath as Route)} onUnauthorized={onUnauthorized} />
     </div>
   );
 }
@@ -219,7 +202,7 @@ export default function App() {
         if (!active) return;
         if (response.status === 401) {
           setUser(null);
-          if (route === '/my-list') navigate('/login', true);
+          if (route !== '/login' && route !== '/signup') navigate('/login', true);
           return;
         }
         if (!response.ok) throw new Error('Could not check your session');
@@ -260,6 +243,6 @@ export default function App() {
     <p>Your account is safe. Check your connection and try again.</p>
     <button className="retry-button" type="button" onClick={() => { setCheckError(false); setChecking(true); setRetryCount((count) => count + 1); }}>Try again</button>
   </main>;
-  if (route === '/my-list') return user ? <MyList user={user} onLogout={logout} logoutBusy={logoutBusy} logoutError={logoutError} /> : <LoadingScreen />;
+  if (route !== '/login' && route !== '/signup') return user ? <MyList path={route} onUnauthorized={() => { setUser(null); navigate('/login', true); }} onLogout={logout} logoutBusy={logoutBusy} logoutError={logoutError} /> : <LoadingScreen />;
   return <AuthPage key={route} mode={route === '/signup' ? 'signup' : 'login'} onAuthenticated={authenticated} />;
 }

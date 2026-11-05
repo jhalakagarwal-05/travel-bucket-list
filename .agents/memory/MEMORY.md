@@ -1,1 +1,2 @@
 - [Project stack](project-stack.md) — the user requires the chosen Node.js, Express, React/Vite, and PostgreSQL/Drizzle stack throughout the project.
+- [Browser verification](browser-verification.md) — testing-worker availability has differed from advertised guidance; report verification limits accurately.

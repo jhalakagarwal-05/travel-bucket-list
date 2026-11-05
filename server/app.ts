@@ -3,6 +3,7 @@ import express from "express";
 import session from "express-session";
 import { authRouter } from "./auth.js";
 import { pool } from "./db.js";
+import { travelRouter } from "./destinations.js";
 
 const sessionSecret = process.env.SESSION_SECRET;
 
@@ -41,6 +42,7 @@ app.use(
 );
 
 app.use("/api/auth", authRouter);
+app.use("/api", travelRouter);
 app.use("/api", (_request, response) => {
   response.status(404).json({ error: "That endpoint does not exist." });
 });
