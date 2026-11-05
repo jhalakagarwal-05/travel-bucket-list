@@ -45,10 +45,10 @@ app.use(
 );
 
 app.use("/api/auth", authRouter);
-app.use("/api/dashboard", dashboardRouter);
-app.use("/api/map", mapRouter);
 app.use("/api/share-links", shareRouter);
 app.use("/api/public", publicShareRouter);
+app.use("/api/dashboard", dashboardRouter);
+app.use("/api/map", mapRouter);
 app.use("/api", travelRouter);
 app.use("/api", (_request, response) => {
   response.status(404).json({ error: "That endpoint does not exist." });

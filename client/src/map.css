@@ -143,6 +143,62 @@
 .map-notice-mark--small svg { width: 25px; height: 25px; }
 .map-coordinate-notice { gap: 13px; padding: 13px 17px; }
 .map-coordinate-notice p { flex: 1; }
+.map-unmapped-section {
+  margin: 0 0 18px;
+  padding: 22px 24px 10px;
+  border: 1px solid #e5eae4;
+  border-radius: 18px;
+  background: #fbfcfa;
+}
+.map-unmapped-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 11px;
+}
+.map-unmapped-heading h2 {
+  margin: 5px 0 4px;
+  color: var(--ink);
+  font: 700 18px/1.3 'Manrope', sans-serif;
+  letter-spacing: -.03em;
+}
+.map-unmapped-heading p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+.map-unmapped-count {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  color: #79663e;
+  background: #f3ead6;
+  font: 700 12px 'Manrope', sans-serif;
+}
+.map-unmapped-list { margin: 0; padding: 0; list-style: none; }
+.map-unmapped-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 0;
+  border-top: 1px solid #e9ede8;
+}
+.map-unmapped-item > div { display: grid; gap: 3px; min-width: 0; }
+.map-unmapped-item strong { overflow: hidden; color: #334940; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.map-unmapped-item > div span { color: #7b8781; font-size: 11px; }
+.map-unmapped-edit {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.map-unmapped-edit:hover { color: var(--teal-dark); text-decoration: underline; text-underline-offset: 3px; }
 .map-inline-link {
   display: inline-flex;
   flex: 0 0 auto;
@@ -254,6 +310,7 @@
   .map-coordinate-notice { flex-wrap: wrap; }
   .map-coordinate-notice p { flex: 1 1 calc(100% - 58px); }
   .map-coordinate-notice .map-inline-link { margin-left: 53px; }
+  .map-unmapped-section { padding: 18px 17px 8px; }
 }
 @media (max-width: 480px) {
   .map-heading { display: block; }
@@ -269,6 +326,8 @@
   .map-notice p { font-size: 11px; }
   .map-empty-notice .map-inline-link { margin-left: 58px; }
   .map-coordinate-notice .map-inline-link { margin-left: 0; }
+  .map-unmapped-heading h2 { font-size: 16px; }
+  .map-unmapped-item { align-items: flex-start; }
   .map-message-card { margin: 24px auto; padding: 30px 22px; }
   .map-panel-skeleton { min-height: 390px; }
 }

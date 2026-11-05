@@ -82,18 +82,10 @@ publicShareRouter.get("/share/:token", async (request, response, next) => {
     }
 
     const rows = await db.select({
-      id: destinations.id,
       name: destinations.name,
       country: destinations.country,
       categoryName: categories.name,
       status: sql<string>`COALESCE(${destinations.status}, 'dream')`,
-      priority: sql<number>`COALESCE(${destinations.priority}, 3)`,
-      estimatedCost: destinations.estimatedCost,
-      visitedDate: destinations.visitedDate,
-      notes: destinations.notes,
-      latitude: destinations.latitude,
-      longitude: destinations.longitude,
-      createdAt: destinations.createdAt,
     })
       .from(destinations)
       .leftJoin(categories, eq(destinations.categoryId, categories.id))
