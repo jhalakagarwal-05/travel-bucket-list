@@ -3,10 +3,11 @@ import type { FormEvent } from 'react';
 import DestinationWorkspace from './Destinations';
 import Dashboard from './Dashboard';
 import MapView from './MapView';
+import PublicShare from './PublicShare';
 import './index.css';
 
 type User = { id: number; email: string };
-type Route = '/login' | '/signup' | '/my-list' | '/starred' | '/map' | '/dashboard' | `/destinations/${string}`;
+type Route = '/login' | '/signup' | '/my-list' | '/starred' | '/map' | '/dashboard' | `/destinations/${string}` | `/share/${string}`;
 
 function getRoute(): Route {
   const path = window.location.pathname;
@@ -14,6 +15,7 @@ function getRoute(): Route {
   if (path === '/starred') return path;
   if (path === '/dashboard') return path;
   if (path === '/map') return path;
+  if (path.startsWith('/share/')) return path as Route;
   if (path.startsWith('/destinations/')) return path as Route;
   return '/my-list';
 }
@@ -206,6 +208,11 @@ export default function App() {
     let active = true;
     setChecking(true);
     setCheckError(false);
+    if (route.startsWith('/share/')) {
+      setUser(null);
+      setChecking(false);
+      return () => { active = false; };
+    }
     fetch('/api/auth/me', { credentials: 'include' })
       .then(async (response) => {
         if (!active) return;
@@ -246,6 +253,10 @@ export default function App() {
     }
   }
 
+  if (route.startsWith('/share/')) {
+    const token = route.slice('/share/'.length).split('/')[0];
+    return <PublicShare token={token} navigate={(path) => navigate(path as Route)} />;
+  }
   if (checking) return <LoadingScreen />;
   if (checkError && !user) return <main className="load-error">
     <span className="eyebrow">A small detour</span><h1>We couldn’t connect.</h1>

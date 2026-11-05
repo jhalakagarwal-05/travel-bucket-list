@@ -58,9 +58,17 @@ export const stars = pgTable(
   (table) => [unique("stars_user_destination_unique").on(table.userId, table.destinationId)],
 );
 
+export const shareLinks = pgTable("share_links", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const usersRelations = relations(users, ({ many }) => ({
   destinations: many(destinations),
   stars: many(stars),
+  shareLinks: many(shareLinks),
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
@@ -78,6 +86,10 @@ export const starsRelations = relations(stars, ({ one }) => ({
   destination: one(destinations, { fields: [stars.destinationId], references: [destinations.id] }),
 }));
 
+export const shareLinksRelations = relations(shareLinks, ({ one }) => ({
+  user: one(users, { fields: [shareLinks.userId], references: [users.id] }),
+}));
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Category = typeof categories.$inferSelect;
@@ -86,3 +98,5 @@ export type Destination = typeof destinations.$inferSelect;
 export type NewDestination = typeof destinations.$inferInsert;
 export type Star = typeof stars.$inferSelect;
 export type NewStar = typeof stars.$inferInsert;
+export type ShareLink = typeof shareLinks.$inferSelect;
+export type NewShareLink = typeof shareLinks.$inferInsert;
