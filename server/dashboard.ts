@@ -34,7 +34,7 @@ dashboardRouter.get("/", async (_request, response, next) => {
     const dashboard: DashboardData = {
       totalDestinations: totals.totalDestinations,
       visitedCount: totals.visitedCount,
-      averagePriority: totals.priorityCount ? Math.floor(totals.priorityTotal / totals.priorityCount) : 0,
+      averagePriority: totals.priorityCount ? totals.priorityTotal / totals.priorityCount : 0,
       categories: rows.map((row) => ({
         categoryId: row.categoryId,
         name: row.name || "Uncategorized",
