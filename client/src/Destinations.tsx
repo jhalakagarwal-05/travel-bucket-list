@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "re
 import DestinationFilters from "./DestinationFilters";
 import "./destinations.css";
 import { findDestinations, initialFindOptions, type FindOptions } from "./findDestinations";
+import { pickDreamDestination } from "./surprise";
 
 type DestinationStatus = "dream" | "planned" | "visited";
 
@@ -165,6 +166,7 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
   const [destination, setDestination] = useState<Destination | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [findOptions, setFindOptions] = useState<FindOptions>(initialFindOptions);
+  const [surpriseMessage, setSurpriseMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -181,6 +183,7 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
     setLoading(true);
     setLoadError("");
     setStarError("");
+    setSurpriseMessage("");
     setFormError("");
     setFieldErrors({});
     setDestination(null);
@@ -251,6 +254,15 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
   }, [route.type, route.id, onUnauthorized, reloadToken]);
 
   const retryLoad = () => setReloadToken((value) => value + 1);
+  const surpriseMe = () => {
+    const destination = pickDreamDestination(destinations);
+    if (!destination) {
+      setSurpriseMessage("No dream destinations yet. Add a place and mark it as Dream to try again.");
+      return;
+    }
+    setSurpriseMessage("");
+    navigate(`/destinations/${destination.id}`);
+  };
   const visibleDestinations = useMemo(
     () => route.type === "list" ? findDestinations(destinations, findOptions) : destinations,
     [route.type, destinations, findOptions],
@@ -370,9 +382,13 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
           </div>
           <div className="list-head-action">
             <span className="destination-count"><strong>{isStarredPage ? destinations.length : visibleDestinations.length}</strong> {(isStarredPage ? destinations.length : visibleDestinations.length) === 1 ? "place" : "places"}</span>
-            {!isStarredPage && <button type="button" className="destination-button primary" onClick={() => navigate("/destinations/new")}><Icon name="plus" size={18} /> Add a place</button>}
+            {!isStarredPage && <>
+              <button type="button" className="destination-button quiet surprise-button" onClick={surpriseMe}><Icon name="spark" size={17} /> Surprise me</button>
+              <button type="button" className="destination-button primary" onClick={() => navigate("/destinations/new")}><Icon name="plus" size={18} /> Add a place</button>
+            </>}
           </div>
         </div>
+        {!isStarredPage && surpriseMessage && <p className="surprise-message" role="status">{surpriseMessage}</p>}
         {!isStarredPage && <DestinationFilters options={findOptions} onChange={setFindOptions} categories={categories} matchCount={visibleDestinations.length} totalCount={destinations.length} />}
         {starError && <div className="star-alert" role="alert">{starError}</div>}
         {(isStarredPage ? destinations.length > 0 : visibleDestinations.length > 0) ? (
