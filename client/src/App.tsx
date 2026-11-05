@@ -4,11 +4,12 @@ import DestinationWorkspace from './Destinations';
 import './index.css';
 
 type User = { id: number; email: string };
-type Route = '/login' | '/signup' | '/my-list' | `/destinations/${string}`;
+type Route = '/login' | '/signup' | '/my-list' | '/starred' | `/destinations/${string}`;
 
 function getRoute(): Route {
   const path = window.location.pathname;
   if (path === '/login' || path === '/signup') return path;
+  if (path === '/starred') return path;
   if (path.startsWith('/destinations/')) return path as Route;
   return '/my-list';
 }
@@ -147,14 +148,14 @@ function AuthPage({ mode, onAuthenticated }: { mode: 'login' | 'signup'; onAuthe
   );
 }
 
-function SiteNav({ onLogout, busy }: { onLogout: () => void; busy: boolean }) {
+function SiteNav({ path, onLogout, busy }: { path: string; onLogout: () => void; busy: boolean }) {
   return (
     <header className="site-header">
       <nav className="nav-inner" aria-label="Main navigation">
         <Brand />
         <div className="nav-links">
-          <a className="nav-item active" href="/my-list" aria-current="page">My List</a>
-          <span className="nav-item disabled" aria-disabled="true" title="Not available yet">Starred</span>
+          <a className={`nav-item ${path === '/my-list' || path.startsWith('/destinations/') ? 'active' : ''}`} href="/my-list" aria-current={path === '/my-list' || path.startsWith('/destinations/') ? 'page' : undefined} onClick={(event) => { event.preventDefault(); navigate('/my-list'); }}>My List</a>
+          <a className={`nav-item ${path === '/starred' ? 'active' : ''}`} href="/starred" aria-current={path === '/starred' ? 'page' : undefined} onClick={(event) => { event.preventDefault(); navigate('/starred'); }}>Starred</a>
           <span className="nav-item disabled" aria-disabled="true" title="Not available yet">Map</span>
           <span className="nav-item disabled" aria-disabled="true" title="Not available yet">Dashboard</span>
         </div>
@@ -167,7 +168,7 @@ function SiteNav({ onLogout, busy }: { onLogout: () => void; busy: boolean }) {
 function MyList({ path, onUnauthorized, onLogout, logoutBusy, logoutError }: { path: string; onUnauthorized: () => void; onLogout: () => void; logoutBusy: boolean; logoutError: string }) {
   return (
     <div className="app-shell">
-      <SiteNav onLogout={onLogout} busy={logoutBusy} />
+      <SiteNav path={path} onLogout={onLogout} busy={logoutBusy} />
       {logoutError && <div className="form-alert" role="alert" style={{ maxWidth: 520, margin: '24px auto' }}>{logoutError}</div>}
       <DestinationWorkspace path={path} navigate={(nextPath) => navigate(nextPath as Route)} onUnauthorized={onUnauthorized} />
     </div>

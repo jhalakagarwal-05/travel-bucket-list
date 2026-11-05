@@ -6,7 +6,7 @@ if (!process.env.DATABASE_URL) {
 
 export default defineConfig({
   schema: "./shared/schema.ts",
-  tablesFilter: ["users", "categories", "destinations"],
+  tablesFilter: ["users", "categories", "destinations", "stars"],
   dialect: "postgresql",
   dbCredentials: {
     url: process.env.DATABASE_URL,

@@ -15,6 +15,7 @@ type Destination = {
   visitedDate: string | null;
   notes: string | null;
   createdAt: string | null;
+  starred: boolean;
 };
 
 type Category = { id: number; name: string };
@@ -68,7 +69,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-function Icon({ name, size = 20 }: { name: "pin" | "arrow" | "plus" | "back" | "edit" | "trash" | "globe" | "calendar" | "tag" | "spark"; size?: number }) {
+function Icon({ name, size = 20 }: { name: "pin" | "arrow" | "plus" | "back" | "edit" | "trash" | "globe" | "calendar" | "tag" | "spark" | "star"; size?: number }) {
   const shared = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true as const };
   const paths: Record<typeof name, ReactNode> = {
     pin: <><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></>,
@@ -81,6 +82,7 @@ function Icon({ name, size = 20 }: { name: "pin" | "arrow" | "plus" | "back" | "
     calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18" /></>,
     tag: <><path d="M20 13 13 20 4 11V4h7l9 9Z" /><circle cx="8" cy="8" r="1" /></>,
     spark: <><path d="m12 3 1.6 6.4L20 11l-6.4 1.6L12 19l-1.6-6.4L4 11l6.4-1.6L12 3Z" /><path d="m19 16 .7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16Z" /></>,
+    star: <path d="m12 3 2.75 5.57 6.15.9-4.45 4.34 1.05 6.13L12 17.05l-5.5 2.89 1.05-6.13L3.1 9.47l6.15-.9L12 3Z" />,
   };
   return <svg {...shared}>{paths[name]}</svg>;
 }
@@ -134,10 +136,23 @@ function EmptyList({ onAdd }: { onAdd: () => void }) {
   );
 }
 
+function StarredEmpty({ onBrowse }: { onBrowse: () => void }) {
+  return (
+    <section className="destination-empty starred-empty">
+      <div className="empty-orbit"><Icon name="star" size={31} /></div>
+      <span className="destination-kicker">Your shortlist, at a glance</span>
+      <h2>No starred places yet.</h2>
+      <p>When a place feels like a must, add a star and it will be waiting here.</p>
+      <button type="button" className="destination-button primary" onClick={onBrowse}>Browse My List <Icon name="arrow" size={17} /></button>
+    </section>
+  );
+}
+
 export default function DestinationWorkspace({ path, navigate, onUnauthorized }: Props) {
   const route = useMemo(() => {
     const cleanPath = path.split("?")[0].replace(/\/+$/, "") || "/";
     if (cleanPath === "/my-list") return { type: "list" as const, id: null };
+    if (cleanPath === "/starred") return { type: "starred" as const, id: null };
     if (cleanPath === "/destinations/new") return { type: "new" as const, id: null };
     const match = cleanPath.match(/^\/destinations\/([^/]+)(\/edit)?$/);
     if (match) return { type: match[2] ? "edit" as const : "detail" as const, id: match[1] };
@@ -152,6 +167,8 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
   const [deleting, setDeleting] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
   const [loadError, setLoadError] = useState("");
+  const [starError, setStarError] = useState("");
+  const [starPendingId, setStarPendingId] = useState<number | null>(null);
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<FormValues>(initialForm);
@@ -160,6 +177,7 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
     let active = true;
     setLoading(true);
     setLoadError("");
+    setStarError("");
     setFormError("");
     setFieldErrors({});
     setDestination(null);
@@ -173,8 +191,8 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
       if (active) setLoadError(apiError.message || "Please try again in a moment.");
     };
 
-    if (route.type === "list") {
-      request<{ destinations: Destination[] }>("/api/destinations")
+    if (route.type === "list" || route.type === "starred") {
+      request<{ destinations: Destination[] }>(route.type === "starred" ? "/api/starred" : "/api/destinations")
         .then((result) => { if (active) setDestinations(result.destinations); })
         .catch(handleError)
         .finally(() => { if (active) setLoading(false); });
@@ -218,6 +236,29 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
   }, [route.type, route.id, onUnauthorized, reloadToken]);
 
   const retryLoad = () => setReloadToken((value) => value + 1);
+
+  const toggleStar = async (item: Destination) => {
+    if (starPendingId !== null) return;
+    setStarPendingId(item.id);
+    setStarError("");
+    try {
+      const result = await request<{ starred: boolean }>(`/api/destinations/${encodeURIComponent(String(item.id))}/star`, {
+        method: item.starred ? "DELETE" : "PUT",
+      });
+      setDestinations((current) => route.type === "starred" && !result.starred
+        ? current.filter((entry) => entry.id !== item.id)
+        : current.map((entry) => entry.id === item.id ? { ...entry, starred: result.starred } : entry));
+      setDestination((current) => current?.id === item.id ? { ...current, starred: result.starred } : current);
+    } catch (error) {
+      const apiError = error as ApiError;
+      if (apiError.status === 401) onUnauthorized();
+      else setStarError(apiError.status === 404
+        ? "This place is no longer available in your journal."
+        : "We couldn't update this star just now. Please try again.");
+    } finally {
+      setStarPendingId(null);
+    }
+  };
 
   const updateField = (key: keyof FormValues, value: string) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -298,24 +339,27 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
     return <LoadFailure message={loadError} retry={retryLoad} back={() => navigate("/my-list")} />;
   }
 
-  if (route.type === "list") {
+  if (route.type === "list" || route.type === "starred") {
+    const isStarredPage = route.type === "starred";
     return (
       <main className="destination-page destination-list">
         <div className="destination-list-head">
           <div>
-            <p className="destination-kicker"><span className="kicker-rule" /> Your personal travel journal</p>
-            <h1>My List<span className="title-period">.</span></h1>
-            <p className="destination-intro">A little collection of places, past and future.</p>
+            <p className="destination-kicker"><span className="kicker-rule" /> {isStarredPage ? "The places to keep close" : "Your personal travel journal"}</p>
+            <h1>{isStarredPage ? "Starred" : "My List"}<span className="title-period">.</span></h1>
+            <p className="destination-intro">{isStarredPage ? "Your most-loved places, all in one little list." : "A little collection of places, past and future."}</p>
           </div>
           <div className="list-head-action">
             <span className="destination-count"><strong>{destinations.length}</strong> {destinations.length === 1 ? "place" : "places"}</span>
-            <button type="button" className="destination-button primary" onClick={() => navigate("/destinations/new")}><Icon name="plus" size={18} /> Add a place</button>
+            {!isStarredPage && <button type="button" className="destination-button primary" onClick={() => navigate("/destinations/new")}><Icon name="plus" size={18} /> Add a place</button>}
           </div>
         </div>
+        {starError && <div className="star-alert" role="alert">{starError}</div>}
         {destinations.length ? (
           <div className="destination-grid">
             {destinations.map((item, index) => (
-              <button type="button" className="destination-card" key={item.id} onClick={() => navigate(`/destinations/${item.id}`)} style={{ animationDelay: `${Math.min(index * 55, 275)}ms` }}>
+              <article className="destination-card" key={item.id} style={{ animationDelay: `${Math.min(index * 55, 275)}ms` }}>
+                <button type="button" className="card-open" onClick={() => navigate(`/destinations/${item.id}`)} aria-label={`Open ${item.name}, ${item.country}`}>
                 <span className={`card-landscape landscape-${item.status}`}>
                   <span className="landscape-halo" />
                   <span className="landscape-ring ring-one" />
@@ -323,18 +367,22 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
                   <span className="landscape-pin"><Icon name="pin" size={23} /></span>
                   <span className="card-number">{String(index + 1).padStart(2, "0")}</span>
                 </span>
-                <span className="card-body">
-                  <span className="card-title-row"><span className="card-name">{item.name}</span><StatusPill status={item.status} /></span>
-                  <span className="card-country"><Icon name="globe" size={15} />{item.country}</span>
-                  <span className="card-footer">
-                    <span>{item.categoryName || "A place to remember"}</span>
-                    <span className="card-arrow"><Icon name="arrow" size={16} /></span>
+                  <span className="card-body">
+                    <span className="card-title-row"><span className="card-name">{item.name}</span><StatusPill status={item.status} /></span>
+                    <span className="card-country"><Icon name="globe" size={15} />{item.country}</span>
+                    <span className="card-footer">
+                      <span>{item.categoryName || "A place to remember"}</span>
+                      <span className="card-arrow"><Icon name="arrow" size={16} /></span>
+                    </span>
                   </span>
-                </span>
-              </button>
+                </button>
+                <button type="button" className={`star-toggle card-star ${item.starred ? "is-starred" : ""}`} aria-label={`${item.starred ? "Remove" : "Add"} ${item.name} ${item.starred ? "from" : "to"} starred`} aria-pressed={item.starred} disabled={starPendingId !== null} onClick={() => toggleStar(item)}>
+                  <Icon name="star" size={18} />
+                </button>
+              </article>
             ))}
           </div>
-        ) : <EmptyList onAdd={() => navigate("/destinations/new")} />}
+        ) : isStarredPage ? <StarredEmpty onBrowse={() => navigate("/my-list")} /> : <EmptyList onAdd={() => navigate("/destinations/new")} />}
       </main>
     );
   }
@@ -438,6 +486,10 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
             {destination.visitedDate && <span><Icon name="calendar" size={16} />{new Date(`${destination.visitedDate}T00:00:00`).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</span>}
             {destination.estimatedCost && <span><span className="cost-sign">$</span>{destination.estimatedCost}</span>}
           </div>
+          {starError && <div className="star-alert detail-star-alert" role="alert">{starError}</div>}
+          <button type="button" className={`star-toggle detail-star ${destination.starred ? "is-starred" : ""}`} aria-label={`${destination.starred ? "Remove" : "Add"} ${destination.name} ${destination.starred ? "from" : "to"} starred`} aria-pressed={destination.starred} disabled={starPendingId !== null} onClick={() => toggleStar(destination)}>
+            <Icon name="star" size={18} /> {starPendingId === destination.id ? "Updating…" : destination.starred ? "Starred" : "Add to starred"}
+          </button>
           <div className="detail-divider" />
           <div className="detail-priority">
             <span className="detail-label">Priority</span>
