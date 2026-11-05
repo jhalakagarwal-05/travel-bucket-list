@@ -1,0 +1,1 @@
+Build ONLY a "Surprise me" button on My List that picks a random destination with status "dream" and opens its detail page. If there are none, show a friendly message. Don't modify PLAN.md. Save this prompt verbatim to prompts/surprise.md.
