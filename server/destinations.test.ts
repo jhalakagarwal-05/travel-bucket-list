@@ -75,6 +75,40 @@ describe("private destination CRUD", () => {
     await owner.post("/api/auth/logout");
   });
 
+  it("stores valid coordinate pairs, includes them in list/detail data, and rejects invalid or partial pairs", async () => {
+    const owner = await account();
+    const created = await owner.post("/api/destinations").send({
+      ...fields, latitude: 0, longitude: 0,
+    });
+    expect(created.status).toBe(201);
+    const id = created.body.destination.id;
+    expect(created.body.destination).toMatchObject({ latitude: 0, longitude: 0 });
+    expect((await owner.get("/api/destinations")).body.destinations[0])
+      .toMatchObject({ latitude: 0, longitude: 0 });
+    expect((await owner.get(`/api/destinations/${id}`)).body.destination)
+      .toMatchObject({ latitude: 0, longitude: 0 });
+
+    const updated = await owner.put(`/api/destinations/${id}`).send({
+      ...fields, latitude: "35.0116", longitude: "135.7681",
+    });
+    expect(updated.status).toBe(200);
+    expect(updated.body.destination).toMatchObject({ latitude: 35.0116, longitude: 135.7681 });
+
+    for (const invalid of [
+      { latitude: 91, longitude: 0 },
+      { latitude: -91, longitude: 0 },
+      { latitude: 0, longitude: 181 },
+      { latitude: "north", longitude: 0 },
+      { latitude: 35.0116 },
+      { longitude: 135.7681 },
+    ]) {
+      const response = await owner.post("/api/destinations").send({ ...fields, ...invalid });
+      expect(response.status).toBe(400);
+      expect(response.body.fieldErrors.latitude || response.body.fieldErrors.longitude).toBeTruthy();
+    }
+    await owner.post("/api/auth/logout");
+  });
+
   it("does not reveal or allow changes to another user's destination, even with spoofed owner fields", async () => {
     const owner = await account();
     const other = await account();

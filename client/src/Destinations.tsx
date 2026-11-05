@@ -17,6 +17,8 @@ type Destination = {
   estimatedCost: string | null;
   visitedDate: string | null;
   notes: string | null;
+  latitude: number | null;
+  longitude: number | null;
   createdAt: string | null;
   starred: boolean;
 };
@@ -36,8 +38,11 @@ type FormValues = {
   estimatedCost: string;
   visitedDate: string;
   notes: string;
+  latitude: string;
+  longitude: string;
 };
 type ApiError = Error & { status?: number; fieldErrors?: Record<string, string> };
+type GeocodeResult = { latitude: number; longitude: number; label: string };
 
 const initialForm: FormValues = {
   name: "",
@@ -48,6 +53,8 @@ const initialForm: FormValues = {
   estimatedCost: "",
   visitedDate: "",
   notes: "",
+  latitude: "",
+  longitude: "",
 };
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
@@ -169,9 +176,11 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
   const [surpriseMessage, setSurpriseMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [findingLocation, setFindingLocation] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
   const [loadError, setLoadError] = useState("");
+  const [locationMessage, setLocationMessage] = useState("");
   const [starError, setStarError] = useState("");
   const [starPendingId, setStarPendingId] = useState<number | null>(null);
   const [formError, setFormError] = useState("");
@@ -182,6 +191,7 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
     let active = true;
     setLoading(true);
     setLoadError("");
+    setLocationMessage("");
     setStarError("");
     setSurpriseMessage("");
     setFormError("");
@@ -235,6 +245,8 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
               estimatedCost: item.estimatedCost ?? "",
               visitedDate: item.visitedDate ?? "",
               notes: item.notes ?? "",
+              latitude: item.latitude == null ? "" : String(item.latitude),
+              longitude: item.longitude == null ? "" : String(item.longitude),
             });
           } else {
             setForm(initialForm);
@@ -297,6 +309,36 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
     setFormError("");
   };
 
+  const findLocation = async () => {
+    setLocationMessage("");
+    if (!form.name.trim() || !form.country.trim()) {
+      setLocationMessage("Enter the destination name and country first.");
+      return;
+    }
+    setFindingLocation(true);
+    try {
+      const params = new URLSearchParams({ name: form.name.trim(), country: form.country.trim() });
+      const result = await request<{ locations: GeocodeResult[] }>(`/api/map/geocode?${params.toString()}`);
+      const location = result.locations[0];
+      if (!location) {
+        setLocationMessage("No matching place was found. You can enter coordinates manually.");
+        return;
+      }
+      setForm((current) => ({
+        ...current,
+        latitude: String(location.latitude),
+        longitude: String(location.longitude),
+      }));
+      setLocationMessage(`Found ${location.label}. Review the coordinates before saving.`);
+    } catch (error) {
+      const apiError = error as ApiError;
+      if (apiError.status === 401) onUnauthorized();
+      else setLocationMessage(apiError.message || "Location search failed. You can enter coordinates manually.");
+    } finally {
+      setFindingLocation(false);
+    }
+  };
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError("");
@@ -317,6 +359,8 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
       estimatedCost: form.estimatedCost.trim() || null,
       visitedDate: form.visitedDate || null,
       notes: form.notes.trim() || null,
+      latitude: form.latitude.trim() ? Number(form.latitude) : null,
+      longitude: form.longitude.trim() ? Number(form.longitude) : null,
     };
     setSaving(true);
     try {
@@ -501,6 +545,29 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
                 {fieldErrors.notes && <span className="destination-field-error">{fieldErrors.notes}</span>}
               </div>
             </div>
+            <section className="coordinate-section" aria-labelledby="coordinate-heading">
+              <div className="form-section-heading section-spaced">
+                <span className="section-index">03</span>
+                <div><h2 id="coordinate-heading">Place on the map</h2><p>Add a pin to your personal map.</p></div>
+              </div>
+              <button type="button" className="destination-button quiet location-search-button" onClick={findLocation} disabled={findingLocation}>
+                <Icon name="pin" size={17} /> {findingLocation ? "Finding location…" : "Find location"}
+              </button>
+              <p className="location-privacy-note">This sends only the destination name and country to OpenStreetMap’s Nominatim search when you click. Notes are not sent.</p>
+              {locationMessage && <p className="location-message" role="status">{locationMessage}</p>}
+              <div className="destination-fields coordinate-fields">
+                <div className="destination-field">
+                  <label htmlFor="destination-latitude">Latitude <span className="optional-label">−90 to 90</span></label>
+                  <input id="destination-latitude" name="latitude" type="number" min="-90" max="90" step="any" value={form.latitude} onChange={(event) => updateField("latitude", event.target.value)} placeholder="e.g. 35.0116" aria-invalid={!!fieldErrors.latitude} aria-describedby={fieldErrors.latitude ? "destination-latitude-error" : undefined} />
+                  {fieldErrors.latitude && <span id="destination-latitude-error" className="destination-field-error">{fieldErrors.latitude}</span>}
+                </div>
+                <div className="destination-field">
+                  <label htmlFor="destination-longitude">Longitude <span className="optional-label">−180 to 180</span></label>
+                  <input id="destination-longitude" name="longitude" type="number" min="-180" max="180" step="any" value={form.longitude} onChange={(event) => updateField("longitude", event.target.value)} placeholder="e.g. 135.7681" aria-invalid={!!fieldErrors.longitude} aria-describedby={fieldErrors.longitude ? "destination-longitude-error" : undefined} />
+                  {fieldErrors.longitude && <span id="destination-longitude-error" className="destination-field-error">{fieldErrors.longitude}</span>}
+                </div>
+              </div>
+            </section>
             <div className="destination-form-actions">
               <button type="button" className="destination-button quiet" onClick={() => isEdit && destination ? navigate(`/destinations/${destination.id}`) : navigate("/my-list")}>Cancel</button>
               <button type="submit" className="destination-button primary" disabled={saving}>{saving ? <><span className="button-pulse" /> Saving…</> : <>{isEdit ? "Save changes" : "Save destination"} <Icon name="arrow" size={17} /></>}</button>

@@ -279,6 +279,15 @@
 .destination-field-error { color: #a8433c; font-size: 11px; line-height: 1.4; }
 .destination-form-alert { margin: 0 0 17px; padding: 11px 13px; border: 1px solid #f0d6cf; border-radius: 10px; background: #fff5f2; color: #9e443b; font-size: 12px; line-height: 1.5; }
 .section-spaced { margin-top: 29px; }
+.coordinate-section {
+  margin-top: 26px;
+  padding-top: 2px;
+}
+.coordinate-section .form-section-heading { margin-bottom: 14px; }
+.location-search-button { min-height: 39px; margin-bottom: 10px; padding: 0 13px; font-size: 12px; }
+.location-privacy-note, .location-message { margin: 0 0 12px; color: #84908c; font-size: 11px; line-height: 1.55; }
+.location-message { color: #527368; }
+.coordinate-fields { margin-top: 11px; }
 .status-options { display: flex; gap: 9px; margin: 0; padding: 0; border: 0; }
 .status-option {
   min-height: 40px; flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;

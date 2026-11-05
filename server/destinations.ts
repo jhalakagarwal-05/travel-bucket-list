@@ -20,6 +20,8 @@ const selection = {
   country: destinations.country,
   categoryId: destinations.categoryId,
   categoryName: categories.name,
+  latitude: destinations.latitude,
+  longitude: destinations.longitude,
   status: destinations.status,
   priority: destinations.priority,
   estimatedCost: destinations.estimatedCost,
@@ -83,6 +85,24 @@ async function validate(body: Record<string, unknown>) {
       fieldErrors.visitedDate = "Please enter a valid visited date.";
     }
   }
+  const readCoordinate = (key: "latitude" | "longitude", limit: number) => {
+    const raw = body[key];
+    if (raw === undefined || raw === null || raw === "" ||
+        (typeof raw === "string" && raw.trim() === "")) return null;
+    const value = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw.trim()) : NaN;
+    if (!Number.isFinite(value) || Math.abs(value) > limit) {
+      fieldErrors[key] = `Please enter a valid ${key === "latitude" ? "latitude (−90 to 90)" : "longitude (−180 to 180)"}.`;
+      return null;
+    }
+    return value;
+  };
+  const latitude = readCoordinate("latitude", 90);
+  const longitude = readCoordinate("longitude", 180);
+  if ((latitude === null) !== (longitude === null)) {
+    const message = "Enter both latitude and longitude, or leave both blank.";
+    fieldErrors.latitude ||= message;
+    fieldErrors.longitude ||= message;
+  }
   if (body.notes !== undefined && body.notes !== null && typeof body.notes !== "string") {
     fieldErrors.notes = "Please enter notes as text.";
   }
@@ -92,6 +112,7 @@ async function validate(body: Record<string, unknown>) {
       name, country, categoryId,
       status: status as "dream" | "planned" | "visited",
       priority, estimatedCost, visitedDate,
+      latitude, longitude,
       notes: typeof body.notes === "string" ? body.notes : null,
     },
   };
