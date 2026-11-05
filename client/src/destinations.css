@@ -46,6 +46,45 @@
 .list-head-action { display: flex; align-items: center; gap: 22px; padding-bottom: 3px; }
 .destination-count { color: #8a9793; font-size: 12px; white-space: nowrap; }
 .destination-count strong { color: #526761; font-size: 14px; }
+.destination-filters {
+  margin: -13px 0 29px;
+  padding: 17px 18px 12px;
+  border: 1px solid #e5ebe5;
+  border-radius: 17px;
+  background: #fbfcf8;
+}
+.filter-controls {
+  display: grid;
+  grid-template-columns: minmax(210px, 1.6fr) repeat(3, minmax(128px, .85fr)) auto;
+  align-items: end;
+  gap: 12px;
+}
+.filter-search, .filter-select { min-width: 0; display: grid; gap: 7px; }
+.filter-search label, .filter-select label { color: #61716b; font-size: 10px; font-weight: 700; letter-spacing: .06em; }
+.filter-search-input { position: relative; }
+.filter-search-input svg {
+  position: absolute; top: 50%; left: 12px; width: 16px; height: 16px;
+  fill: none; stroke: #8b9a93; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+  transform: translateY(-50%); pointer-events: none;
+}
+.filter-search input, .filter-select select {
+  width: 100%; min-width: 0; height: 41px; padding: 0 11px;
+  border: 1px solid #dfe7e0; border-radius: 10px;
+  background-color: #fff; color: #35463f; font-size: 12px;
+}
+.filter-search input { padding-left: 36px; }
+.filter-search input::placeholder { color: #9ba7a1; }
+.filter-search input:focus, .filter-select select:focus { outline: none; border-color: var(--dw-teal); box-shadow: 0 0 0 3px rgba(15,118,110,.08); }
+.filter-clear {
+  min-height: 40px; padding: 0 10px; border: 0; border-radius: 9px;
+  background: transparent; color: #648078; font-size: 11px; font-weight: 700;
+  cursor: pointer; white-space: nowrap; transition: background .18s ease, color .18s ease;
+}
+.filter-clear:hover:not(:disabled) { background: #edf4ef; color: var(--dw-teal); }
+.filter-clear:disabled { color: #a6b0aa; cursor: default; }
+.filter-clear:focus-visible { outline: 3px solid rgba(15,118,110,.24); outline-offset: 2px; }
+.filter-result-count { margin: 11px 2px 0; color: #82908a; font-size: 11px; }
+.filter-result-count strong { color: #526b61; font-weight: 700; }
 .destination-button {
   min-height: 45px;
   border: 0;
@@ -196,6 +235,7 @@
   box-shadow: 0 0 0 11px #faf6eb;
 }
 .destination-empty .destination-kicker { justify-content: center; }
+.filter-empty { margin-top: 5px; }
 .destination-empty h2 { max-width: 450px; margin: 12px 0 9px; font: 700 25px/1.25 'Manrope', sans-serif; letter-spacing: -.045em; }
 .destination-empty p { max-width: 405px; margin: 0 0 22px; color: var(--dw-muted); font-size: 14px; line-height: 1.7; }
 
@@ -331,6 +371,9 @@
 @keyframes dw-spin { to { transform: rotate(360deg); } }
 @media (max-width: 900px) {
   .destination-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .filter-controls { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .filter-search { grid-column: 1 / -1; }
+  .filter-clear { justify-self: start; }
   .form-layout { grid-template-columns: minmax(200px,.7fr) minmax(0,1.3fr); gap: 38px; }
   .destination-form { padding: 26px 24px; }
   .destination-detail { grid-template-columns: minmax(210px,.8fr) minmax(0,1.2fr); }
@@ -341,6 +384,10 @@
   .destination-list-head { display: block; margin-bottom: 27px; }
   .destination-list-head h1 { font-size: 42px; }
   .list-head-action { justify-content: space-between; margin-top: 22px; }
+  .destination-filters { margin: -8px 0 23px; padding: 14px 13px 11px; border-radius: 14px; }
+  .filter-controls { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 11px 9px; }
+  .filter-search { grid-column: 1 / -1; }
+  .filter-clear { min-height: 38px; padding-left: 0; }
   .destination-grid { grid-template-columns: 1fr; gap: 16px; }
   .card-landscape { height: 170px; }
   .destination-card { border-radius: 18px; }
@@ -365,6 +412,7 @@
 }
 @media (max-width: 420px) {
   .destination-page { width: calc(100% - 30px); }
+  .filter-select select { padding: 0 7px; font-size: 11px; }
   .destination-fields { grid-template-columns: 1fr; }
   .destination-field.full { grid-column: auto; }
   .status-options { gap: 5px; }
