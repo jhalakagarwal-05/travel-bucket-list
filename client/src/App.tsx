@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import DestinationWorkspace from './Destinations';
+import Dashboard from './Dashboard';
 import './index.css';
 
 type User = { id: number; email: string };
-type Route = '/login' | '/signup' | '/my-list' | '/starred' | `/destinations/${string}`;
+type Route = '/login' | '/signup' | '/my-list' | '/starred' | '/dashboard' | `/destinations/${string}`;
 
 function getRoute(): Route {
   const path = window.location.pathname;
   if (path === '/login' || path === '/signup') return path;
   if (path === '/starred') return path;
+  if (path === '/dashboard') return path;
   if (path.startsWith('/destinations/')) return path as Route;
   return '/my-list';
 }
@@ -157,7 +159,7 @@ function SiteNav({ path, onLogout, busy }: { path: string; onLogout: () => void;
           <a className={`nav-item ${path === '/my-list' || path.startsWith('/destinations/') ? 'active' : ''}`} href="/my-list" aria-current={path === '/my-list' || path.startsWith('/destinations/') ? 'page' : undefined} onClick={(event) => { event.preventDefault(); navigate('/my-list'); }}>My List</a>
           <a className={`nav-item ${path === '/starred' ? 'active' : ''}`} href="/starred" aria-current={path === '/starred' ? 'page' : undefined} onClick={(event) => { event.preventDefault(); navigate('/starred'); }}>Starred</a>
           <span className="nav-item disabled" aria-disabled="true" title="Not available yet">Map</span>
-          <span className="nav-item disabled" aria-disabled="true" title="Not available yet">Dashboard</span>
+          <a className={`nav-item ${path === '/dashboard' ? 'active' : ''}`} href="/dashboard" aria-current={path === '/dashboard' ? 'page' : undefined} onClick={(event) => { event.preventDefault(); navigate('/dashboard'); }}>Dashboard</a>
         </div>
         <button className="nav-logout" type="button" onClick={onLogout} disabled={busy}>{busy ? 'Logging out…' : 'Log out'}</button>
       </nav>
@@ -170,7 +172,9 @@ function MyList({ path, onUnauthorized, onLogout, logoutBusy, logoutError }: { p
     <div className="app-shell">
       <SiteNav path={path} onLogout={onLogout} busy={logoutBusy} />
       {logoutError && <div className="form-alert" role="alert" style={{ maxWidth: 520, margin: '24px auto' }}>{logoutError}</div>}
-      <DestinationWorkspace path={path} navigate={(nextPath) => navigate(nextPath as Route)} onUnauthorized={onUnauthorized} />
+      {path === '/dashboard'
+        ? <Dashboard onUnauthorized={onUnauthorized} />
+        : <DestinationWorkspace path={path} navigate={(nextPath) => navigate(nextPath as Route)} onUnauthorized={onUnauthorized} />}
     </div>
   );
 }
