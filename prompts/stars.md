@@ -1,0 +1,1 @@
+Read PLAN.md. Build ONLY stars: create the stars table from PLAN.md (one row per user + destination; a user can star a destination only once). Add a star toggle on cards and the detail page, and a "Starred" page in the nav. Don't modify PLAN.md. Save this prompt verbatim to prompts/stars.md.

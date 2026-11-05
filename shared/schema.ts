@@ -9,6 +9,7 @@ import {
   serial,
   text,
   timestamp,
+  unique,
   varchar,
 } from "drizzle-orm/pg-core";
 
@@ -47,17 +48,34 @@ export const destinations = pgTable(
   ],
 );
 
+export const stars = pgTable(
+  "stars",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    destinationId: integer("destination_id").notNull().references(() => destinations.id, { onDelete: "cascade" }),
+  },
+  (table) => [unique("stars_user_destination_unique").on(table.userId, table.destinationId)],
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   destinations: many(destinations),
+  stars: many(stars),
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
   destinations: many(destinations),
 }));
 
-export const destinationsRelations = relations(destinations, ({ one }) => ({
+export const destinationsRelations = relations(destinations, ({ one, many }) => ({
   user: one(users, { fields: [destinations.userId], references: [users.id] }),
   category: one(categories, { fields: [destinations.categoryId], references: [categories.id] }),
+  stars: many(stars),
+}));
+
+export const starsRelations = relations(stars, ({ one }) => ({
+  user: one(users, { fields: [stars.userId], references: [users.id] }),
+  destination: one(destinations, { fields: [stars.destinationId], references: [destinations.id] }),
 }));
 
 export type User = typeof users.$inferSelect;
@@ -66,3 +84,5 @@ export type Category = typeof categories.$inferSelect;
 export type NewCategory = typeof categories.$inferInsert;
 export type Destination = typeof destinations.$inferSelect;
 export type NewDestination = typeof destinations.$inferInsert;
+export type Star = typeof stars.$inferSelect;
+export type NewStar = typeof stars.$inferInsert;

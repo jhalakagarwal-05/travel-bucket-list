@@ -1,11 +1,18 @@
-import { and, desc, eq } from "drizzle-orm";
-import { Router } from "express";
-import { categories, destinations } from "../shared/schema.js";
+import { and, desc, eq, sql } from "drizzle-orm";
+import { Router, type RequestHandler } from "express";
+import { categories, destinations, stars } from "../shared/schema.js";
 import { requireUser } from "./auth.js";
 import { db } from "./db.js";
 
 export const travelRouter = Router();
 travelRouter.use(requireUser);
+
+// All destination reads below are owner-scoped; the matching owner's star is private.
+const isStarred = sql<boolean>`exists (
+  select 1 from ${stars}
+  where ${stars.destinationId} = ${destinations.id}
+    and ${stars.userId} = ${destinations.userId}
+)`;
 
 const selection = {
   id: destinations.id,
@@ -19,6 +26,7 @@ const selection = {
   visitedDate: destinations.visitedDate,
   notes: destinations.notes,
   createdAt: destinations.createdAt,
+  starred: isStarred.as("starred"),
 };
 
 function owned(id: number, userId: number) {
@@ -104,6 +112,51 @@ travelRouter.get("/destinations", async (_request, response, next) => {
     response.json({ destinations: rows });
   } catch (error) { next(error); }
 });
+
+travelRouter.get("/starred", async (_request, response, next) => {
+  try {
+    const rows = await db.select(selection).from(destinations)
+      .leftJoin(categories, eq(destinations.categoryId, categories.id))
+      .where(and(eq(destinations.userId, response.locals.user.id), isStarred))
+      .orderBy(desc(destinations.id));
+    response.json({ destinations: rows });
+  } catch (error) { next(error); }
+});
+
+function setStar(starred: boolean): RequestHandler {
+  return async (request, response, next) => {
+    try {
+      const id = parseId(request.params.id);
+      const userId: number = response.locals.user.id;
+      if (!id) {
+        response.status(404).json({ error: "Destination not found." });
+        return;
+      }
+      const found = await db.transaction(async (transaction) => {
+        // Serialize toggles and deletion on this owned destination.
+        const [destination] = await transaction.select({ id: destinations.id })
+          .from(destinations).where(owned(id, userId)).limit(1).for("update");
+        if (!destination) return false;
+        if (starred) {
+          await transaction.insert(stars).values({ userId, destinationId: id })
+            .onConflictDoNothing({ target: [stars.userId, stars.destinationId] });
+        } else {
+          await transaction.delete(stars)
+            .where(and(eq(stars.userId, userId), eq(stars.destinationId, id)));
+        }
+        return true;
+      });
+      if (!found) {
+        response.status(404).json({ error: "Destination not found." });
+        return;
+      }
+      response.json({ starred });
+    } catch (error) { next(error); }
+  };
+}
+
+travelRouter.put("/destinations/:id/star", setStar(true));
+travelRouter.delete("/destinations/:id/star", setStar(false));
 
 travelRouter.get("/destinations/:id", async (request, response, next) => {
   try {
