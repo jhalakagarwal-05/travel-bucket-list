@@ -58,12 +58,15 @@ export const stars = pgTable(
   (table) => [unique("stars_user_destination_unique").on(table.userId, table.destinationId)],
 );
 
-export const shareLinks = pgTable("share_links", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  token: text("token").notNull().unique(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const shareLinks = pgTable(
+  "share_links",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
+    token: varchar("token", { length: 64 }).notNull().unique(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+);
 
 export const usersRelations = relations(users, ({ many }) => ({
   destinations: many(destinations),

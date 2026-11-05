@@ -3,18 +3,10 @@ import "./share.css";
 
 type DestinationStatus = "dream" | "planned" | "visited";
 type SharedDestination = {
-  id: number;
   name: string;
   country: string;
   categoryName: string | null;
   status: DestinationStatus;
-  priority: number;
-  estimatedCost: string | null;
-  visitedDate: string | null;
-  notes: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  createdAt: string | null;
 };
 type PublicShareProps = {
   token: string;
@@ -27,15 +19,13 @@ function ShareMark() {
 }
 
 function SharedCard({ item, index }: { item: SharedDestination; index: number }) {
-  const visitedDate = item.visitedDate ? new Date(`${item.visitedDate.slice(0, 10)}T00:00:00`) : null;
-  const validDate = visitedDate && !Number.isNaN(visitedDate.getTime()) ? new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(visitedDate) : null;
   return (
     <article className="public-destination-card" style={{ animationDelay: `${Math.min(index * 60, 360)}ms` }}>
       <div className={`public-card-art public-art-${item.status}`} aria-hidden="true">
         <span className="public-art-sun" />
         <span className="public-art-contour contour-one" />
         <span className="public-art-contour contour-two" />
-        <span className="public-art-coordinate">{item.latitude !== null && item.longitude !== null ? `${item.latitude.toFixed(2)}° / ${item.longitude.toFixed(2)}°` : `JOURNAL ENTRY  ${String(index + 1).padStart(2, "0")}`}</span>
+        <span className="public-art-coordinate">JOURNAL ENTRY  {String(index + 1).padStart(2, "0")}</span>
         <span className="public-art-pin"><svg viewBox="0 0 24 24" fill="none"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></svg></span>
       </div>
       <div className="public-card-body">
@@ -46,10 +36,7 @@ function SharedCard({ item, index }: { item: SharedDestination; index: number })
         <p className="public-card-country"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg>{item.country}</p>
         <div className="public-card-meta">
           <span>{item.categoryName || "A place to remember"}</span>
-          {validDate && <span>Visited {validDate}</span>}
-          {item.estimatedCost && <span>Estimated {item.estimatedCost}</span>}
         </div>
-        {item.notes && <div className="public-card-notes"><span className="public-notes-label">A note to remember</span><p>{item.notes}</p></div>}
       </div>
     </article>
   );
@@ -152,7 +139,7 @@ export default function PublicShare({ token, navigate: _navigate }: PublicShareP
           <>
             <div className="public-list-heading"><div><p className="public-share-kicker">The places</p><h2>Collected along the way<span>.</span></h2></div><span className="public-count">{destinations.length} {destinations.length === 1 ? "entry" : "entries"}</span></div>
             <section className="public-share-grid" aria-label="Shared destinations">
-              {destinations.map((item, index) => <SharedCard key={item.id} item={item} index={index} />)}
+              {destinations.map((item, index) => <SharedCard key={`${item.name}-${item.country}-${index}`} item={item} index={index} />)}
             </section>
           </>
         ) : (

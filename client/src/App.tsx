@@ -4,10 +4,11 @@ import DestinationWorkspace from './Destinations';
 import Dashboard from './Dashboard';
 import MapView from './MapView';
 import PublicShare from './PublicShare';
+import SharePanel from './SharePanel';
 import './index.css';
 
 type User = { id: number; email: string };
-type Route = '/login' | '/signup' | '/my-list' | '/starred' | '/map' | '/dashboard' | `/destinations/${string}` | `/share/${string}`;
+type Route = '/login' | '/signup' | '/my-list' | '/starred' | '/map' | '/dashboard' | '/share' | `/share/${string}` | `/destinations/${string}`;
 
 function getRoute(): Route {
   const path = window.location.pathname;
@@ -15,6 +16,7 @@ function getRoute(): Route {
   if (path === '/starred') return path;
   if (path === '/dashboard') return path;
   if (path === '/map') return path;
+  if (path === '/share') return path;
   if (path.startsWith('/share/')) return path as Route;
   if (path.startsWith('/destinations/')) return path as Route;
   return '/my-list';
@@ -164,6 +166,7 @@ function SiteNav({ path, onLogout, busy }: { path: string; onLogout: () => void;
           <a className={`nav-item ${path === '/starred' ? 'active' : ''}`} href="/starred" aria-current={path === '/starred' ? 'page' : undefined} onClick={(event) => { event.preventDefault(); navigate('/starred'); }}>Starred</a>
           <a className={`nav-item ${path === '/map' ? 'active' : ''}`} href="/map" aria-current={path === '/map' ? 'page' : undefined} onClick={(event) => { event.preventDefault(); navigate('/map'); }}>Map</a>
           <a className={`nav-item ${path === '/dashboard' ? 'active' : ''}`} href="/dashboard" aria-current={path === '/dashboard' ? 'page' : undefined} onClick={(event) => { event.preventDefault(); navigate('/dashboard'); }}>Dashboard</a>
+          <a className={`nav-item ${path === '/share' ? 'active' : ''}`} href="/share" aria-current={path === '/share' ? 'page' : undefined} onClick={(event) => { event.preventDefault(); navigate('/share'); }}>Share list</a>
         </div>
         <button className="nav-logout" type="button" onClick={onLogout} disabled={busy}>{busy ? 'Logging out…' : 'Log out'}</button>
       </nav>
@@ -176,7 +179,9 @@ function MyList({ path, onUnauthorized, onLogout, logoutBusy, logoutError }: { p
     <div className="app-shell">
       <SiteNav path={path} onLogout={onLogout} busy={logoutBusy} />
       {logoutError && <div className="form-alert" role="alert" style={{ maxWidth: 520, margin: '24px auto' }}>{logoutError}</div>}
-      {path === '/dashboard'
+      {path === '/share'
+        ? <SharePanel onUnauthorized={onUnauthorized} />
+        : path === '/dashboard'
         ? <Dashboard onUnauthorized={onUnauthorized} />
         : path === '/map'
           ? <MapView navigate={(nextPath) => navigate(nextPath as Route)} onUnauthorized={onUnauthorized} />
@@ -206,13 +211,14 @@ export default function App() {
 
   useEffect(() => {
     let active = true;
-    setChecking(true);
-    setCheckError(false);
     if (route.startsWith('/share/')) {
       setUser(null);
       setChecking(false);
+      setCheckError(false);
       return () => { active = false; };
     }
+    setChecking(true);
+    setCheckError(false);
     fetch('/api/auth/me', { credentials: 'include' })
       .then(async (response) => {
         if (!active) return;
@@ -257,6 +263,7 @@ export default function App() {
     const token = route.slice('/share/'.length).split('/')[0];
     return <PublicShare token={token} navigate={(path) => navigate(path as Route)} />;
   }
+
   if (checking) return <LoadingScreen />;
   if (checkError && !user) return <main className="load-error">
     <span className="eyebrow">A small detour</span><h1>We couldn’t connect.</h1>

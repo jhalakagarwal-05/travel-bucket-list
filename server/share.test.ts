@@ -58,23 +58,24 @@ describe("private share-link management and public read-only lists", () => {
     const publicResponse = await request(app).get(`/api/public/share/${token}`);
     expect(publicResponse.status).toBe(200);
     expect(publicResponse.headers["x-robots-tag"]).toBe("noindex, nofollow");
-    expect(publicResponse.body).toMatchObject({
+    expect(publicResponse.body).toEqual({
       destinations: [{
-        id: ownerDestination.body.destination.id,
         name: "Kyoto",
         country: "Japan",
+        categoryName: null,
         status: "visited",
-        priority: 5,
-        estimatedCost: "1200",
-        visitedDate: "2026-04-10",
-        notes: "See the gardens.",
-        latitude: 35.0116,
-        longitude: 135.7681,
       }],
     });
     expect(publicResponse.body).not.toHaveProperty("user");
+    expect(publicResponse.body.destinations[0]).not.toHaveProperty("id");
     expect(publicResponse.body.destinations[0]).not.toHaveProperty("userId");
     expect(publicResponse.body.destinations[0]).not.toHaveProperty("starred");
+    for (const privateField of [
+      "passwordHash", "password_hash", "session", "priority", "estimatedCost",
+      "visitedDate", "notes", "latitude", "longitude", "createdAt",
+    ]) {
+      expect(publicResponse.body.destinations[0]).not.toHaveProperty(privateField);
+    }
     expect(JSON.stringify(publicResponse.body)).not.toContain("share-");
     expect((await other.agent.get("/api/share-links")).body.active).toBe(false);
     await other.agent.delete("/api/share-links");
