@@ -1,0 +1,1 @@
+Read PLAN.md. Build ONLY a Dashboard page: a Chart.js bar chart of destinations by category, plus stats for total destinations, number visited, and average priority (one decimal place). Only the logged-in user's data. Don't modify PLAN.md. Save this prompt verbatim to prompts/dashboard.md.
