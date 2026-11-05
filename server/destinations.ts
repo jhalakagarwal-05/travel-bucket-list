@@ -128,7 +128,6 @@ travelRouter.get("/destinations", async (_request, response, next) => {
   try {
     const rows = await db.select(selection).from(destinations)
       .leftJoin(categories, eq(destinations.categoryId, categories.id))
-      .where(eq(destinations.userId, response.locals.user.id))
       .orderBy(desc(destinations.id));
     response.json({ destinations: rows });
   } catch (error) { next(error); }
