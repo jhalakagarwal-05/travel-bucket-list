@@ -1,0 +1,1 @@
+Read PLAN.md. Build ONLY search, filter, and sort on My List: a search box by name or country, filters for status and category, and a sort for newest first and highest priority. Don't modify PLAN.md. Save this prompt verbatim to prompts/find.md.

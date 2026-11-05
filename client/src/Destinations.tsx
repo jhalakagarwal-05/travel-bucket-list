@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import DestinationFilters from "./DestinationFilters";
 import "./destinations.css";
+import { findDestinations, initialFindOptions, type FindOptions } from "./findDestinations";
 
 type DestinationStatus = "dream" | "planned" | "visited";
 
@@ -162,6 +164,7 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [destination, setDestination] = useState<Destination | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [findOptions, setFindOptions] = useState<FindOptions>(initialFindOptions);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -191,8 +194,20 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
       if (active) setLoadError(apiError.message || "Please try again in a moment.");
     };
 
-    if (route.type === "list" || route.type === "starred") {
-      request<{ destinations: Destination[] }>(route.type === "starred" ? "/api/starred" : "/api/destinations")
+    if (route.type === "list") {
+      Promise.all([
+        request<{ destinations: Destination[] }>("/api/destinations"),
+        request<{ categories: Category[] }>("/api/categories"),
+      ])
+        .then(([destinationResult, categoryResult]) => {
+          if (!active) return;
+          setDestinations(destinationResult.destinations);
+          setCategories(categoryResult.categories);
+        })
+        .catch(handleError)
+        .finally(() => { if (active) setLoading(false); });
+    } else if (route.type === "starred") {
+      request<{ destinations: Destination[] }>("/api/starred")
         .then((result) => { if (active) setDestinations(result.destinations); })
         .catch(handleError)
         .finally(() => { if (active) setLoading(false); });
@@ -236,6 +251,10 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
   }, [route.type, route.id, onUnauthorized, reloadToken]);
 
   const retryLoad = () => setReloadToken((value) => value + 1);
+  const visibleDestinations = useMemo(
+    () => route.type === "list" ? findDestinations(destinations, findOptions) : destinations,
+    [route.type, destinations, findOptions],
+  );
 
   const toggleStar = async (item: Destination) => {
     if (starPendingId !== null) return;
@@ -350,14 +369,15 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
             <p className="destination-intro">{isStarredPage ? "Your most-loved places, all in one little list." : "A little collection of places, past and future."}</p>
           </div>
           <div className="list-head-action">
-            <span className="destination-count"><strong>{destinations.length}</strong> {destinations.length === 1 ? "place" : "places"}</span>
+            <span className="destination-count"><strong>{isStarredPage ? destinations.length : visibleDestinations.length}</strong> {(isStarredPage ? destinations.length : visibleDestinations.length) === 1 ? "place" : "places"}</span>
             {!isStarredPage && <button type="button" className="destination-button primary" onClick={() => navigate("/destinations/new")}><Icon name="plus" size={18} /> Add a place</button>}
           </div>
         </div>
+        {!isStarredPage && <DestinationFilters options={findOptions} onChange={setFindOptions} categories={categories} matchCount={visibleDestinations.length} totalCount={destinations.length} />}
         {starError && <div className="star-alert" role="alert">{starError}</div>}
-        {destinations.length ? (
+        {(isStarredPage ? destinations.length > 0 : visibleDestinations.length > 0) ? (
           <div className="destination-grid">
-            {destinations.map((item, index) => (
+            {(isStarredPage ? destinations : visibleDestinations).map((item, index) => (
               <article className="destination-card" key={item.id} style={{ animationDelay: `${Math.min(index * 55, 275)}ms` }}>
                 <button type="button" className="card-open" onClick={() => navigate(`/destinations/${item.id}`)} aria-label={`Open ${item.name}, ${item.country}`}>
                 <span className={`card-landscape landscape-${item.status}`}>
@@ -382,7 +402,15 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
               </article>
             ))}
           </div>
-        ) : isStarredPage ? <StarredEmpty onBrowse={() => navigate("/my-list")} /> : <EmptyList onAdd={() => navigate("/destinations/new")} />}
+        ) : isStarredPage ? <StarredEmpty onBrowse={() => navigate("/my-list")} /> : destinations.length === 0 ? <EmptyList onAdd={() => navigate("/destinations/new")} /> : (
+          <section className="destination-empty filter-empty">
+            <div className="empty-orbit"><Icon name="pin" size={33} /></div>
+            <span className="destination-kicker">A different way to wander</span>
+            <h2>No places match those filters.</h2>
+            <p>Try another search or loosen a filter to bring your destinations back into view.</p>
+            <button type="button" className="destination-button primary" onClick={() => setFindOptions(initialFindOptions)}>Clear search and filters <Icon name="arrow" size={17} /></button>
+          </section>
+        )}
       </main>
     );
   }
