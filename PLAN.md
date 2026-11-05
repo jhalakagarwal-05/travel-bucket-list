@@ -65,4 +65,15 @@ Tests will be written with Vitest. For each test, I will break the feature on pu
 
 | Planned feature | Shipped / Changed / Cut | Status (Done/Backlogged) | Learning | What changed and why |
 |---|---|---|---|---|
-|  |  |  |  |  |
+| Sign up and login | Changed | Done | Login needs session storage I hadn't designed | Agent added a sessions table to store logins in PostgreSQL |
+| Data model | Shipped | Done | Specifying exact columns made the Agent build exactly what I designed | Built as planned |
+| CRUD | Shipped | Done | The Agent couldn't test signed-in screens, so I had to test manually | Built as planned |
+| Validation | Shipped | Done | Combining small features saved time | Built in the same PR as CRUD |
+| Stars | Shipped | Done | A junction table keeps one stars table for all users | Built as planned |
+| Search, filter, sort | Changed | Done | The Agent adds extras unless told not to | Agent added result counts and a clear-filters button |
+| Dashboard | Shipped | Done | Writing the expected value (3.7) in the plan made it easy to test | Built as planned |
+| Map view | Changed | Done | My "riskiest" feature took minutes once the Agent had a clear spec | Added a Find location lookup; a Replit-suggested task added a list of unmapped places |
+| Surprise me | Shipped | Done | Small, well-scoped features are fast | Built as planned |
+| Public share link | Changed | Done | The Agent made security choices I hadn't specified | Token stored as a hash; added a way to turn the link off |
+| Tests | Changed | Done | A test can fail for the wrong reason | The first isolation test depended on existing data, so I had it rewritten with fresh users |
+| Publishing | Changed | Done | Deployment needs its own run command | Publishing failed until the Agent added build and run commands to .replit |
