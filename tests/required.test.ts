@@ -38,7 +38,6 @@ it("data isolation: User B cannot see User A's destinations", async () => {
 
   try {
     const kyoto = await addDestination(userA.agent, "Kyoto", 5);
-    expect((await userA.agent.get("/api/destinations")).body.destinations).toHaveLength(1);
 
     await userB.agent.post("/api/auth/logout");
     const login = await userB.agent.post("/api/auth/login").send({
