@@ -15,15 +15,12 @@ describe("travel data model", () => {
     ]);
   });
 
-  it("includes the five seeded categories exactly once each", async () => {
-    const names = ["Beach", "City", "Hiking", "Food", "Family"];
+  it("includes exactly the six requested travel categories", async () => {
+    const names = ["Beach", "City", "Mountains", "Food", "Culture", "Vibes"].sort();
     const result = await pool.query(
-      "SELECT name, count(*)::integer AS count FROM categories WHERE name = ANY($1::text[]) GROUP BY name",
-      [names],
+      "SELECT name, count(*)::integer AS count FROM categories GROUP BY name ORDER BY name",
     );
-    expect(result.rows.sort((a, b) => a.name.localeCompare(b.name))).toEqual(
-      names.sort().map((name) => ({ name, count: 1 })),
-    );
+    expect(result.rows).toEqual(names.map((name) => ({ name, count: 1 })));
   });
 
   it("links destinations to users and categories and enforces model constraints", async () => {

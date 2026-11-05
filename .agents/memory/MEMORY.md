@@ -2,3 +2,4 @@
 - [Browser verification](browser-verification.md) — testing-worker availability has differed from advertised guidance; report verification limits accurately.
 - [Dependency overrides](dependency-overrides.md) — confirm overrides in the resolved tree; successful installs can retain vulnerable locked dependencies.
 - [Drizzle push confirmations](drizzle-push-confirmations.md) — schema diffs may prompt even for additive changes; inspect SQL before any noninteractive force.
+- [Travel category intent](travel-category-intent.md) — keep category choices aligned with how the user groups trips; ask before ambiguous migrations.

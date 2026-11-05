@@ -20,7 +20,7 @@ The application tables are defined with Drizzle in `shared/schema.ts`. PostgreSQ
 | `id` | `serial` | Primary key |
 | `name` | `text` | Nullable |
 
-The seed script adds Beach, City, Hiking, Food, and Family when they are missing.
+The seed script ensures Beach, City, Mountains, Food, Culture, and Vibes are present. It merges existing Hiking and Family destinations into Mountains.
 
 ### `destinations`
 
