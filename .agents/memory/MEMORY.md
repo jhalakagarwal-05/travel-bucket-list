@@ -1,2 +1,3 @@
 - [Project stack](project-stack.md) — the user requires the chosen Node.js, Express, React/Vite, and PostgreSQL/Drizzle stack throughout the project.
 - [Browser verification](browser-verification.md) — testing-worker availability has differed from advertised guidance; report verification limits accurately.
+- [Dependency overrides](dependency-overrides.md) — confirm overrides in the resolved tree; successful installs can retain vulnerable locked dependencies.

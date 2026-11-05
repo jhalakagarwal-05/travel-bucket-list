@@ -2,16 +2,18 @@ import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import DestinationWorkspace from './Destinations';
 import Dashboard from './Dashboard';
+import MapView from './MapView';
 import './index.css';
 
 type User = { id: number; email: string };
-type Route = '/login' | '/signup' | '/my-list' | '/starred' | '/dashboard' | `/destinations/${string}`;
+type Route = '/login' | '/signup' | '/my-list' | '/starred' | '/map' | '/dashboard' | `/destinations/${string}`;
 
 function getRoute(): Route {
   const path = window.location.pathname;
   if (path === '/login' || path === '/signup') return path;
   if (path === '/starred') return path;
   if (path === '/dashboard') return path;
+  if (path === '/map') return path;
   if (path.startsWith('/destinations/')) return path as Route;
   return '/my-list';
 }
@@ -158,7 +160,7 @@ function SiteNav({ path, onLogout, busy }: { path: string; onLogout: () => void;
         <div className="nav-links">
           <a className={`nav-item ${path === '/my-list' || path.startsWith('/destinations/') ? 'active' : ''}`} href="/my-list" aria-current={path === '/my-list' || path.startsWith('/destinations/') ? 'page' : undefined} onClick={(event) => { event.preventDefault(); navigate('/my-list'); }}>My List</a>
           <a className={`nav-item ${path === '/starred' ? 'active' : ''}`} href="/starred" aria-current={path === '/starred' ? 'page' : undefined} onClick={(event) => { event.preventDefault(); navigate('/starred'); }}>Starred</a>
-          <span className="nav-item disabled" aria-disabled="true" title="Not available yet">Map</span>
+          <a className={`nav-item ${path === '/map' ? 'active' : ''}`} href="/map" aria-current={path === '/map' ? 'page' : undefined} onClick={(event) => { event.preventDefault(); navigate('/map'); }}>Map</a>
           <a className={`nav-item ${path === '/dashboard' ? 'active' : ''}`} href="/dashboard" aria-current={path === '/dashboard' ? 'page' : undefined} onClick={(event) => { event.preventDefault(); navigate('/dashboard'); }}>Dashboard</a>
         </div>
         <button className="nav-logout" type="button" onClick={onLogout} disabled={busy}>{busy ? 'Logging out…' : 'Log out'}</button>
@@ -174,6 +176,8 @@ function MyList({ path, onUnauthorized, onLogout, logoutBusy, logoutError }: { p
       {logoutError && <div className="form-alert" role="alert" style={{ maxWidth: 520, margin: '24px auto' }}>{logoutError}</div>}
       {path === '/dashboard'
         ? <Dashboard onUnauthorized={onUnauthorized} />
+        : path === '/map'
+          ? <MapView navigate={(nextPath) => navigate(nextPath as Route)} onUnauthorized={onUnauthorized} />
         : <DestinationWorkspace path={path} navigate={(nextPath) => navigate(nextPath as Route)} onUnauthorized={onUnauthorized} />}
     </div>
   );
