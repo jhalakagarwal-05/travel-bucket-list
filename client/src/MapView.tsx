@@ -171,7 +171,8 @@ export default function MapView({ navigate, onUnauthorized }: MapViewProps) {
   }, [destinations, error, loading, tileUrl]);
 
   const mappedCount = destinations.filter((destination) => coordinatesFor(destination)).length;
-  const missingCount = destinations.length - mappedCount;
+  const unmappedDestinations = destinations.filter((destination) => !coordinatesFor(destination));
+  const missingCount = unmappedDestinations.length;
 
   if (loading) {
     return (
@@ -229,6 +230,39 @@ export default function MapView({ navigate, onUnauthorized }: MapViewProps) {
           <a className="map-inline-link" href="/my-list" onClick={(event) => { event.preventDefault(); navigate('/my-list'); }}>My List <span aria-hidden="true">→</span></a>
         </section>
       ) : null}
+
+      {unmappedDestinations.length > 0 && (
+        <section className="map-unmapped-section" aria-labelledby="map-unmapped-heading">
+          <div className="map-unmapped-heading">
+            <div>
+              <span className="map-kicker">Ready to add</span>
+              <h2 id="map-unmapped-heading">Places not on the map yet</h2>
+              <p>Add or find a location to give each place its map pin.</p>
+            </div>
+            <span className="map-unmapped-count">{unmappedDestinations.length}</span>
+          </div>
+          <ul className="map-unmapped-list">
+            {unmappedDestinations.map((destination) => {
+              const editPath = `/destinations/${encodeURIComponent(String(destination.id))}/edit`;
+              return (
+                <li className="map-unmapped-item" key={destination.id}>
+                  <div>
+                    <strong>{destination.name}</strong>
+                    <span>{destination.country || 'Country not specified'}</span>
+                  </div>
+                  <a
+                    className="map-unmapped-edit"
+                    href={editPath}
+                    onClick={(event) => { event.preventDefault(); navigate(editPath); }}
+                  >
+                    Add location <span aria-hidden="true">→</span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <section className="map-frame" aria-label="Map of your destinations">
         <div ref={mapElementRef} className="wander-map-canvas" role="application" aria-label="Interactive map with your destinations" />
