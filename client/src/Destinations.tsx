@@ -3,6 +3,7 @@ import DestinationFilters from "./DestinationFilters";
 import "./destinations.css";
 import { findDestinations, initialFindOptions, type FindOptions } from "./findDestinations";
 import { pickDreamDestination } from "./surprise";
+import SharePanel from "./SharePanel";
 
 type DestinationStatus = "dream" | "planned" | "visited";
 
@@ -432,6 +433,7 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
             </>}
           </div>
         </div>
+        {!isStarredPage && <SharePanel onUnauthorized={onUnauthorized} />}
         {!isStarredPage && surpriseMessage && <p className="surprise-message" role="status">{surpriseMessage}</p>}
         {!isStarredPage && <DestinationFilters options={findOptions} onChange={setFindOptions} categories={categories} matchCount={visibleDestinations.length} totalCount={destinations.length} />}
         {starError && <div className="star-alert" role="alert">{starError}</div>}

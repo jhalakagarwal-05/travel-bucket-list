@@ -6,6 +6,7 @@ import { pool } from "./db.js";
 import { travelRouter } from "./destinations.js";
 import { dashboardRouter } from "./dashboard.js";
 import { mapRouter } from "./map.js";
+import { publicShareRouter, shareRouter } from "./share.js";
 
 const sessionSecret = process.env.SESSION_SECRET;
 
@@ -46,9 +47,16 @@ app.use(
 app.use("/api/auth", authRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/map", mapRouter);
+app.use("/api/share-links", shareRouter);
+app.use("/api/public", publicShareRouter);
 app.use("/api", travelRouter);
 app.use("/api", (_request, response) => {
   response.status(404).json({ error: "That endpoint does not exist." });
+});
+app.use("/share", (_request, response, next) => {
+  response.setHeader("Cache-Control", "no-store");
+  response.setHeader("X-Robots-Tag", "noindex, nofollow");
+  next();
 });
 
 app.use(
