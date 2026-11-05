@@ -9,7 +9,8 @@
     "start": "NODE_ENV=production node dist/index.js",
     "db:push": "drizzle-kit push",
     "db:seed": "tsx server/seed.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:required": "vitest run tests/required.test.ts"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.22",
