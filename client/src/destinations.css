@@ -287,6 +287,8 @@
 .location-search-button { min-height: 39px; margin-bottom: 10px; padding: 0 13px; font-size: 12px; }
 .location-privacy-note, .location-message { margin: 0 0 12px; color: #84908c; font-size: 11px; line-height: 1.55; }
 .location-message { color: #527368; }
+.location-match { display: grid; gap: 3px; margin: 0 0 12px; padding: 10px 12px; border: 1px solid #d7e7df; border-radius: 10px; background: #f4faf6; color: #36594e; font-size: 12px; line-height: 1.5; }
+.location-match strong { color: #24483e; font-size: 11px; }
 .coordinate-fields { margin-top: 11px; }
 .status-options { display: flex; gap: 9px; margin: 0; padding: 0; border: 0; }
 .status-option {

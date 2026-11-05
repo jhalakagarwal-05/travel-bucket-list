@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireUser } from "./auth.js";
 
-type LocationResult = { latitude: number; longitude: number; label: string };
+type LocationResult = { latitude: number; longitude: number; label: string; country: string };
 type CachedResults = { expiresAt: number; results: LocationResult[] };
 
 const cache = new Map<string, CachedResults>();
@@ -55,10 +55,10 @@ async function searchNominatim(name: string, country: string): Promise<LocationR
 
   const lookup = queueRequest(async () => {
     const url = new URL("/search", baseUrl);
-    url.searchParams.set("q", `${name}, ${country}`);
+    url.searchParams.set("q", country ? `${name}, ${country}` : name);
     url.searchParams.set("format", "jsonv2");
     url.searchParams.set("limit", "5");
-    url.searchParams.set("addressdetails", "0");
+    url.searchParams.set("addressdetails", "1");
     const response = await fetch(url, {
       headers: {
         Accept: "application/json",
@@ -71,7 +71,12 @@ async function searchNominatim(name: string, country: string): Promise<LocationR
     if (!Array.isArray(data)) throw new Error("Nominatim returned an invalid result.");
     return data.flatMap((item: unknown): LocationResult[] => {
       if (typeof item !== "object" || item === null) return [];
-      const result = item as { lat?: unknown; lon?: unknown; display_name?: unknown };
+      const result = item as {
+        lat?: unknown;
+        lon?: unknown;
+        display_name?: unknown;
+        address?: { country?: unknown };
+      };
       const latitude = Number(result.lat);
       const longitude = Number(result.lon);
       if (!Number.isFinite(latitude) || Math.abs(latitude) > 90 ||
@@ -79,7 +84,8 @@ async function searchNominatim(name: string, country: string): Promise<LocationR
       return [{
         latitude,
         longitude,
-        label: typeof result.display_name === "string" ? result.display_name : `${name}, ${country}`,
+        label: typeof result.display_name === "string" ? result.display_name : `${name}${country ? `, ${country}` : ""}`,
+        country: typeof result.address?.country === "string" ? result.address.country : country,
       }];
     });
   });
@@ -100,8 +106,8 @@ async function searchNominatim(name: string, country: string): Promise<LocationR
 mapRouter.get("/geocode", async (request, response, next) => {
   const name = typeof request.query.name === "string" ? request.query.name.trim().replace(/\s+/g, " ") : "";
   const country = typeof request.query.country === "string" ? request.query.country.trim().replace(/\s+/g, " ") : "";
-  if (!name || !country || name.length > 150 || country.length > 100) {
-    response.status(400).json({ error: "Enter a destination name and country to find its location." });
+  if (!name || name.length > 150 || country.length > 100) {
+    response.status(400).json({ error: "Enter a destination name to find its location." });
     return;
   }
   try {

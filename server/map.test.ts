@@ -27,10 +27,10 @@ describe("private map and user-triggered location lookup", () => {
     expect((await request(app).get("/api/map/geocode?name=Kyoto&country=Japan")).status).toBe(401);
   });
 
-  it("accepts only complete, bounded destination names and countries", async () => {
+  it("accepts a bounded destination name and an optional bounded country", async () => {
     const { agent } = await account();
     const fetchSpy = vi.spyOn(globalThis, "fetch");
-    for (const query of ["", "?name=Kyoto", "?country=Japan", `?name=${"x".repeat(151)}&country=Japan`]) {
+    for (const query of ["", "?country=Japan", `?name=${"x".repeat(151)}&country=Japan`, `?name=Kyoto&country=${"x".repeat(101)}`]) {
       expect((await agent.get(`/api/map/geocode${query}`)).status).toBe(400);
     }
     expect(fetchSpy).not.toHaveBeenCalled();
@@ -42,7 +42,7 @@ describe("private map and user-triggered location lookup", () => {
     const name = `Wanderlist ${randomUUID()}`;
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(
       JSON.stringify([
-        { lat: "35.0116", lon: "135.7681", display_name: "Kyoto, Japan" },
+        { lat: "35.0116", lon: "135.7681", display_name: "Kyoto, Japan", address: { country: "Japan" } },
         { lat: "91", lon: "0", display_name: "Invalid latitude" },
         { lat: "0", lon: "-181", display_name: "Invalid longitude" },
       ]),
@@ -52,7 +52,7 @@ describe("private map and user-triggered location lookup", () => {
     const first = await agent.get(`/api/map/geocode?name=${encodeURIComponent(name)}&country=Japan`);
     expect(first.status).toBe(200);
     expect(first.body.locations).toEqual([
-      { latitude: 35.0116, longitude: 135.7681, label: "Kyoto, Japan" },
+      { latitude: 35.0116, longitude: 135.7681, label: "Kyoto, Japan", country: "Japan" },
     ]);
 
     const repeated = await agent.get(`/api/map/geocode?name=${encodeURIComponent(`  ${name.toLocaleLowerCase()}  `)}&country=japan`);
@@ -64,7 +64,34 @@ describe("private map and user-triggered location lookup", () => {
     const requestedUrl = new URL(String(url));
     expect(requestedUrl.searchParams.get("format")).toBe("jsonv2");
     expect(requestedUrl.searchParams.get("q")).toBe(`${name}, Japan`);
+    expect(requestedUrl.searchParams.get("addressdetails")).toBe("1");
     expect((options?.headers as Record<string, string>)["User-Agent"]).toMatch(/^Wanderlist\/1\.0/);
+    await agent.post("/api/auth/logout");
+  });
+
+  it("finds by name alone and returns the matched country", async () => {
+    const { agent } = await account();
+    const name = `Country lookup ${randomUUID()}`;
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(
+      JSON.stringify([{
+        lat: "35.0116",
+        lon: "135.7681",
+        display_name: "Kyoto, Japan",
+        address: { country: "Japan" },
+      }]),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    ));
+
+    const result = await agent.get(`/api/map/geocode?name=${encodeURIComponent(name)}`);
+    expect(result.status).toBe(200);
+    expect(result.body.locations).toEqual([{
+      latitude: 35.0116,
+      longitude: 135.7681,
+      label: "Kyoto, Japan",
+      country: "Japan",
+    }]);
+    const requestedUrl = new URL(String(fetchSpy.mock.calls[0][0]));
+    expect(requestedUrl.searchParams.get("q")).toBe(name);
     await agent.post("/api/auth/logout");
   });
 

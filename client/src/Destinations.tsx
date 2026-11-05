@@ -43,7 +43,7 @@ type FormValues = {
   longitude: string;
 };
 type ApiError = Error & { status?: number; fieldErrors?: Record<string, string> };
-type GeocodeResult = { latitude: number; longitude: number; label: string };
+type GeocodeResult = { latitude: number; longitude: number; label: string; country: string };
 
 const initialForm: FormValues = {
   name: "",
@@ -182,6 +182,7 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
   const [reloadToken, setReloadToken] = useState(0);
   const [loadError, setLoadError] = useState("");
   const [locationMessage, setLocationMessage] = useState("");
+  const [matchedPlace, setMatchedPlace] = useState<GeocodeResult | null>(null);
   const [starError, setStarError] = useState("");
   const [starPendingId, setStarPendingId] = useState<number | null>(null);
   const [formError, setFormError] = useState("");
@@ -193,6 +194,7 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
     setLoading(true);
     setLoadError("");
     setLocationMessage("");
+    setMatchedPlace(null);
     setStarError("");
     setSurpriseMessage("");
     setFormError("");
@@ -308,29 +310,37 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
     setForm((current) => ({ ...current, [key]: value }));
     setFieldErrors((current) => ({ ...current, [key]: "" }));
     setFormError("");
+    if (key === "name" || key === "country") {
+      setMatchedPlace(null);
+      setLocationMessage("");
+    }
   };
 
   const findLocation = async () => {
     setLocationMessage("");
-    if (!form.name.trim() || !form.country.trim()) {
-      setLocationMessage("Enter the destination name and country first.");
+    setMatchedPlace(null);
+    if (!form.name.trim()) {
+      setLocationMessage("Enter a destination name first.");
       return;
     }
     setFindingLocation(true);
     try {
-      const params = new URLSearchParams({ name: form.name.trim(), country: form.country.trim() });
+      const params = new URLSearchParams({ name: form.name.trim() });
+      if (form.country.trim()) params.set("country", form.country.trim());
       const result = await request<{ locations: GeocodeResult[] }>(`/api/map/geocode?${params.toString()}`);
       const location = result.locations[0];
       if (!location) {
-        setLocationMessage("No matching place was found. You can enter coordinates manually.");
+        setLocationMessage("No matching place was found. Check the name or enter the country and coordinates manually.");
         return;
       }
       setForm((current) => ({
         ...current,
         latitude: String(location.latitude),
         longitude: String(location.longitude),
+        country: location.country || current.country,
       }));
-      setLocationMessage(`Found ${location.label}. Review the coordinates before saving.`);
+      setMatchedPlace(location);
+      setLocationMessage("Check that this is the right place. You can edit any field before saving.");
     } catch (error) {
       const apiError = error as ApiError;
       if (apiError.status === 401) onUnauthorized();
@@ -555,8 +565,12 @@ export default function DestinationWorkspace({ path, navigate, onUnauthorized }:
               <button type="button" className="destination-button quiet location-search-button" onClick={findLocation} disabled={findingLocation}>
                 <Icon name="pin" size={17} /> {findingLocation ? "Finding location…" : "Find location"}
               </button>
-              <p className="location-privacy-note">This sends only the destination name and country to OpenStreetMap’s Nominatim search when you click. Notes are not sent.</p>
+              <p className="location-privacy-note">This sends the destination name and, if entered, country to OpenStreetMap’s Nominatim search when you click. Notes are not sent.</p>
               {locationMessage && <p className="location-message" role="status">{locationMessage}</p>}
+              {matchedPlace && <div className="location-match" aria-label="Matched place">
+                <strong>Matched place</strong>
+                <span>{matchedPlace.label}</span>
+              </div>}
               <div className="destination-fields coordinate-fields">
                 <div className="destination-field">
                   <label htmlFor="destination-latitude">Latitude <span className="optional-label">−90 to 90</span></label>
