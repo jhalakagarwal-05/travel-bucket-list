@@ -1,0 +1,1 @@
+Publishing fails again with "Could not find run command." A recent merge removed or broke the deployment settings in .replit. Restore the [deployment] section in .replit with the correct build command and run command for Autoscale, and make sure the post-merge script never removes or overwrites it. Don't change any app features. Save this prompt verbatim to prompts/deploy-fix.md.
